@@ -6,6 +6,7 @@ SET(DGTAL_TOOLS_SRC
   raw2vol
   ofs2off
   imageVectorizer
+  testClipping
  )
 
 FOREACH(FILE ${DGTAL_TOOLS_SRC})

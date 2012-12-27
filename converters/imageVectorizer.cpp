@@ -178,18 +178,25 @@ int main( int argc, char** argv )
 
   Board2D exportVecto;  
   SurfelAdjacency<2> sAdj( true );
-
-  for( unsigned int i= step; i<= 255; i+=step){
-    Binarizer b(i, 255); 
+  int depth = 1000000;
+  
+  
+  for( unsigned int i= 0; i>=255; i-=step){
+    Binarizer b(i, i+step); 
     PointFunctorPredicate<Image,Binarizer> predicate(image, b);
     trace.info()<< "preocessing step " << i << endl;
     std::vector< std::vector< Point >  >  vectContours;
-    Surfaces<Z2i::KSpace>::extractAllPointContours4C( vectContours,
-						      ks, predicate, sAdj );  
+    std::vector< std::vector< SCell >  >  vectContoursSCell= Surfaces<Z2i::KSpace>::extractAllPointContours4C( vectContours,
+													       ks, predicate, sAdj );  
     
     for(unsigned int k=0; k< vectContours.size(); k++){
-
+      
       vector<Z2i::Point> aContour = vectContours.at(k);
+      SCell s = vectContoursSCell.at(k).at(0);
+      SCell internal = ks.sIndirectIncident(s, ks.sOrthDir(s));
+      unsigned int valImage = image(ks.sCoords(internal));
+     
+
       GridCurve<Z2i::K2> aCurve; //grid curve
       aCurve.initFromVector(aContour);
       vector<LibBoard::Point> aContourSampled;
@@ -202,11 +209,13 @@ int main( int argc, char** argv )
       }
       
       if(aContourSampled.size()>0){
-	exportVecto.setPenColor(DGtal::Color(i,i,i));
-	exportVecto.fillPolyline(aContourSampled);
+	exportVecto.setPenColor(DGtal::Color(valImage,valImage,valImage));
+	exportVecto.fillPolyline(aContourSampled, i);
       }
+     
+      
+      
     }
-
       
 
       
