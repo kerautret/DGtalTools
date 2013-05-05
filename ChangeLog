@@ -1,3 +1,7 @@
+	====  Release 0.7 ====
+
+* volumetric/volTools:
+	- volCrop: a simple tools to crop 3D volume image from lower and upper point.
 
 
 	====  Release 0.6 ====
