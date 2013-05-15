@@ -71,6 +71,9 @@ int main( int argc, char** argv )
   general_opt.add_options()
     ("help,h", "display this message")
     ("input-file,i", po::value<std::string>(), "vol file (.vol) , pgm3d (.p3d or .pgm3d) file or sdp (sequence of discrete points)" )
+    ("grid", "draw slice images using grid mode. " ) 
+    ("intergrid", "draw slice images using inter grid mode. " ) 
+    ("boundingbox", "draw slice images using boudingbox " ) 
     ("thresholdImage", "threshold the image to define binary shape" ) 
     ("thresholdMin,m",  po::value<int>()->default_value(0), "threshold min to define binary shape" ) 
     ("thresholdMax,M",  po::value<int>()->default_value(255), "threshold max to define binary shape" )
@@ -111,13 +114,22 @@ int main( int argc, char** argv )
     trace.info() << "File extension not recognized: "<< extension << std::endl;
     return 0;
   }
+  Viewer3DImage::ModeVisu mode;
+  if(vm.count("boudingbox"))
+    mode=Viewer3DImage::BoundingBox;
+  else if(vm.count("grid"))
+    mode=Viewer3DImage::Grid;
+  else if(vm.count("intergrid"))
+    mode=Viewer3DImage::InterGrid;
+  else
+    mode=Viewer3DImage::Empty;
   
-  Viewer3DImage viewer;
+  Viewer3DImage viewer(mode);
   viewer.setWindowTitle("simple Volume Viewer");
   viewer.show();
   
   
-
+  if(extension=="vol" || extension=="pgm3d" || extension=="pgm3D"){
    Image3D image = (extension=="vol")? VolReader<Image3D>::importVol( inputFilename ): PNMReader<Image3D>::importPGM3D( inputFilename );
     trace.info() << "Image loaded: "<<image<< std::endl;
     viewer.setVolImage(&image);
@@ -143,6 +155,15 @@ int main( int argc, char** argv )
       }
       viewer<< Viewer3D::updateDisplay;
     }
+  }else if(extension=="sdp"){
+    vector<Z3i::Point> vectVoxels = PointListReader<Z3i::Point>::getPointsFromFile(inputFilename);
+    for(int i=0;i< vectVoxels.size(); i++){
+      viewer << vectVoxels.at(i);
+    }
+
+
+    
+  }
   
 
   return application.exec();
