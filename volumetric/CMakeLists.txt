@@ -5,6 +5,7 @@ SET(DGTAL_TOOLS_SRC
   volCComponentCounter
   volSubSample
   volCrop
+  volCompare
   volFlip
 )
 
