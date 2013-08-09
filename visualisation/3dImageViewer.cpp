@@ -79,7 +79,7 @@ int main( int argc, char** argv )
     ("thresholdMin,m",  po::value<int>()->default_value(0), "threshold min to define binary shape" ) 
     ("thresholdMax,M",  po::value<int>()->default_value(255), "threshold max to define binary shape" )
     ("displaySDP,s", po::value<std::string>(), "display a set of discrete points (.sdp)" )
-    ("displayDigitalSurface", "display the digital surface instead of display all the set of voxels (used with thresholdImage or displaySDP options)" )
+    ("displayDigitalSurface", po::value<int>()->default_value(10), "<minSize> display the digital surface of size <minSize> instead of display all the set of voxels if (used with thresholdImage or displaySDP options)" )
     ("colorizeCC", "colorize each Connected Components of the surface displayed by displayDigitalSurface option." )
     ("colorSDP,c", po::value<std::vector <int> >()->multitoken(), "set the color  discrete points: r g b a " )
     ("scaleX,x",  po::value<float>()->default_value(1.0), "set the scale value in the X direction (default 1.0)" )
@@ -193,6 +193,7 @@ int main( int argc, char** argv )
   }
   
   if(vm.count("displayDigitalSurface")){
+    int minSize = vm["displayDigitalSurface"].as<int>();
     KSpace K;
     Point low = domain.lowerBound(); low[0]=low[0]-1; low[1]=low[1]-1; low[2]=low[2]-1;
     Point upp = domain.upperBound(); upp[0]=upp[0]+1; upp[1]=upp[1]+1; upp[2]=upp[2]+1;
@@ -202,7 +203,7 @@ int main( int argc, char** argv )
     trace.info() << "Extracting surface  set ... " ;
     Surfaces<KSpace>::extractAllConnectedSCell(vectConnectedSCell,K, SAdj, set3d, true);
     trace.info()<< " [done] " <<std::endl;
-    GradientColorMap<long> gradient( 0, vectConnectedSCell.size());
+    GradientColorMap<long> gradient( 0, 6);
     gradient.addColor(DGtal::Color::Red);
     gradient.addColor(DGtal::Color::Yellow);
     gradient.addColor(DGtal::Color::Green);
@@ -210,22 +211,27 @@ int main( int argc, char** argv )
     gradient.addColor(DGtal::Color::Blue);
     gradient.addColor(DGtal::Color::Magenta);
     gradient.addColor(DGtal::Color::Red);
-        
+    int cptCol=0;
     viewer << SetMode3D(vectConnectedSCell.at(0).at(0).className(), "Basic");
     for(unsigned int i= 0; i <vectConnectedSCell.size(); i++){
-      for(unsigned int j= 0; j <vectConnectedSCell.at(i).size(); j++){
-	if(vm.count("colorizeCC")){
-	  DGtal::Color c= gradient(i);
-	  viewer << CustomColors3D(Color(250, 0,0, transp), Color(c.red(),
-								  c.green(),
-								  c.blue(), transp));	    
-	}else  if(vm.count("colorSDP")){
-	  std::vector<int> vcol= vm["colorSDP"].as<std::vector<int > >();
-	  Color c(vcol[0], vcol[1], vcol[2], vcol[3]);
-	  viewer << CustomColors3D(c, c);
+      if(vectConnectedSCell.at(i).size() > minSize){
+	
+	for(unsigned int j= 0; j <vectConnectedSCell.at(i).size(); j++){
+	  if(vm.count("colorizeCC")){
+	    DGtal::Color c= gradient(cptCol);
+	    viewer << CustomColors3D(Color(250, 0,0, transp), Color(c.red(),
+								    c.green(),
+								    c.blue(), transp));	    
+	  }else  if(vm.count("colorSDP")){
+	    std::vector<int> vcol= vm["colorSDP"].as<std::vector<int > >();
+	    Color c(vcol[0], vcol[1], vcol[2], vcol[3]);
+	    viewer << CustomColors3D(c, c);
+	  }
+	  
+	  viewer << vectConnectedSCell.at(i).at(j);
+	  
 	}
-
-	viewer << vectConnectedSCell.at(i).at(j);
+	cptCol++;
       }
     }
   }
