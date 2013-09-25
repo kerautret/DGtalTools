@@ -40,6 +40,8 @@
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/variables_map.hpp>
+#include <limits>
+
 
 using namespace std;
 using namespace DGtal;
@@ -49,6 +51,23 @@ namespace po = boost::program_options;
 
 typedef ImageContainerBySTLVector < Z3i::Domain,  int > Image3D;
 typedef ImageContainerBySTLVector < Z2i::Domain,  int > Image2D;
+
+
+double
+getRMSE(const Image3D & imageA, const Image3D &imageB){
+  double sumDiff=0;
+  for(Image3D::Domain::ConstIterator it = imageA.domain().begin(); it!=imageA.domain().end(); it++){
+    sumDiff+=(imageA(*it)-imageB(*it))*(imageA(*it)-imageB(*it));
+  }
+  return sqrt(sumDiff/imageA.domain().size());
+}
+
+
+double
+getPSNR(const Image3D & imageA, const Image3D &imageB, double rmsd){
+  unsigned long long int d =  std::numeric_limits<Image3D::Value>::max();
+  double res= 10.0*log10(d*d/rmsd);
+}
 
 
 bool 
@@ -64,7 +83,7 @@ isDiff(const Image3D &imageA, int aMin, int aMax, const Image3D &imageB,
 void
 getStatsFromDistanceMap(Statistic<double> & stats, const Image3D &imageA, int aMin, int aMax,
 			const Image3D & imageB,  int bMin, int bMax, 
-			bool statOnFalsePositiveOnly=false){
+			bool statOnFalsePositiveOnly=false, Point *ptMax=0){
 
   // Get the digital set from ref image by computing the surface (use -1 and +1 since the interval of append function are open)
   Z3i::DigitalSet set3dRef (imageA.domain()); 
@@ -81,12 +100,21 @@ getStatsFromDistanceMap(Statistic<double> & stats, const Image3D &imageA, int aM
   SetFromImage<Z3i::DigitalSet>::append<Image3D>(set3dComp, imageB, bMin-1, bMax);
 
   unsigned int nbAdded=0;
+  double maxDist=0;
   //Applying stats from the set to be compared (from imageB)
   for(Z3i::DigitalSet::ConstIterator it= set3dComp.begin();  it!= set3dComp.end(); ++it){
     if((!statOnFalsePositiveOnly) || (isDiff(imageA, aMin, aMax, imageB, bMin, bMax, *it))){
       DTL2::Value distance = dtL2(*it);   
       stats.addValue(distance);
       nbAdded++;
+      if(maxDist<distance){
+	maxDist=distance;
+	if(ptMax!=0){
+	  (*ptMax)[0]=(*it)[0]; 
+	  (*ptMax)[1]=(*it)[1];
+	  (*ptMax)[2]=(*it)[2];
+	}
+      }
     }
   }
   
@@ -97,7 +125,7 @@ getStatsFromDistanceMap(Statistic<double> & stats, const Image3D &imageA, int aM
 
 
 
-// total ref: True Positive, True Negative, False Positive, False Negative
+
 std::vector<int> getVoxelsStats(const Image3D &imageA,  int aMin, int aMax, const Image3D &imageB, 
 				int bMin, int bMax, bool exportStatVoxels,  std::vector<Point> &vectPtBinA,  
 				std::vector<Point> &vectPtCompBinCompA,  std::vector<Point> &vectPtBnotInA, 
@@ -192,8 +220,9 @@ int main(int argc, char**argv)
     ( "aMax", po::value<int>()->default_value(128), "max threshold for a voxel to be considered as belonging to the object of volume A. (default 128)" )
     ( "bMin", po::value<int>()->default_value(0), "min threshold for a voxel to be considered as belonging to the object of volume B. (default 0)" )
     ( "bMax", po::value<int>()->default_value(128), "max threshold for a voxel to be considered as belonging to the object of volume B. (default 128)" )
-    ("statsFromBnotInAOnly" , "apply distance map stats only for voxels of B which are not in A (else compute stats from all distances of the object B).")
-    ("displayTFstats", "Change the comparison diplay by using the  true/false/positive/negative notation and considering the shape A as reference.")
+    ("computeDistanceStats",po::value<std::string>(),  "<filename> computes distance map statistics (max, mean, variance and median Euclidean distance from shape B to shape A, coordinates of farthest point of B to A) and save them in file <filename> (use \"cout\" as filename to use the std output).")
+    ("statsFromBnotInAOnly", "apply distance map stats only for voxels of B which are not in A (else compute stats from all distances of the object B).")
+    ("displayTFstats", "Change the comparison diplay by using the  true/false/positive/negative notation and considering the shape A as reference. It also display precision/recall/f-mean statistics.")
     ("exportSDP", "Export voxels belonging to each categorie (voxels of ( B in A) , (NOT in B and NOT in A),   (B and NOT in A) and (Voxels of NOT in B and in A)). ") ;
   
   bool parseOK=true;
@@ -208,7 +237,7 @@ int main(int argc, char**argv)
   
   if ( vm.count ( "help" ) || ! vm.count("volA")||! vm.count("volB") )
     {
-      trace.info() << "apply basic comparaisons (Number of voxels (B-A), (A-B), ...etc,  statistics on distances) between two volumetric images A and B (shape defined from thresholds). Usefull to determine classical statistics like false positive related stats."<<std::endl
+      trace.info() << "apply basic comparaisons (Number of voxels (B-A), (A-B), ...etc,  statistics on distances, RMSE, PSNR) between two volumetric images A and B (shape defined from thresholds). Usefull to determine classical statistics like false positive related stats."<<std::endl
 		   << std::endl << "Basic usage: "<<std::endl
 		   << "\t volCompare --volA <volAFilename> --volB <volBFilename> "<<std::endl
 		   << general_opt << "\n"
@@ -244,7 +273,7 @@ int main(int argc, char**argv)
   if(vm.count("displayTFstats")){
     std::cout << "# Statistics given with the reference shape A: "<< volAFilename<< " (defined with threshold min: " << aMin << " and max: " << aMax << " )"<< endl;
     std::cout << "# and with the compared shape B: "<< volBFilename << "  (defined with threshold min: " << bMin << " and max: " << bMax << " )"<< endl;
-    std::cout << "# #True_Positive #TrueNegative #FalsePositive #FalseNegative  #TotalinA #TotalInB #TotalComplementOfRef #TotalComplementOfComp "<< endl;    
+    std::cout << "# #True_Positive #TrueNegative #FalsePositive #FalseNegative  #TotalinA #TotalInB #TotalComplementOfRef #TotalComplementOfComp Precision Recall F-Mean RMSE PSNR "<< endl;    
 
     if(vm.count("exportSDP")){
       exportSetofPoints("truePos.sdp",  voxelsBinA);
@@ -266,18 +295,43 @@ int main(int argc, char**argv)
 
   for(unsigned int i=0; i< vectStats.size(); i++) 
     std::cout << vectStats.at(i) << " "; 
-  std::cout << endl;
+  if(vm.count("displayTFstats")){
+    double precision = (double)vectStats.at(0)/(vectStats.at(0)+vectStats.at(2));
+    double recall = (double)vectStats.at(0)/(vectStats.at(0)+vectStats.at(3));
+    double fmean = (2.0*precision*recall)/(precision+recall);
+    std::cout << precision<<  " " << recall << " " << fmean << " " ; 
+  }
+  double rmse= getRMSE(imageA, imageB);
+  double psnr= getPSNR(imageA, imageB, rmse);
   
+  std::cout << rmse << " " << psnr << endl;
+  
+  if(vm.count("computeDistanceStats")){
+    trace.info() << "Computing Distance Map stats ...";
+    Statistic<double> statDistances(true); 
+    Point ptMax;
+    getStatsFromDistanceMap(statDistances, imageA, aMin, aMax, imageB, bMin, bMax, vm.count("statsFromFalsePosOnly"), &ptMax );    
+    trace.info() << " [done] " << std::endl;
+    if(vm["computeDistanceStats"].as<std::string>()!="cout"){
+      std::ofstream ofs;
+      ofs.open(vm["computeDistanceStats"].as<std::string>().c_str(), std::ofstream::out );
+      ofs << "# Statistics from distances " << std::endl;
+      ofs << "# Max(MinDistance(shape B to shape A) Mean(MinDistance(shape B to shape A) Variance(MinDistance(shape B to shape A) Mediane(MinDistance(shape B to shape A)  " << std::endl;
+      ofs << statDistances.max() << " " << statDistances.mean()  << " " << statDistances.variance()  << "  "<< statDistances.median() << " " << ptMax[0] << " " << ptMax[1] <<  " " << ptMax[2] << std::endl; 
+    }else{
+      std::cout << "# Statistics from distances " << std::endl;
+      std::cout << "# Max(MinDistance(shape B to shape A) Mean(MinDistance(shape B to shape A) Variance(MinDistance(shape B to shape A) Mediane(MinDistance(shape B to shape A)  " << std::endl;
+      std::cout << statDistances.max() << " " << statDistances.mean()  << " " << statDistances.variance()  << "  "<< statDistances.median() << " " << ptMax[0] << " " << ptMax[1] << " " << ptMax[2] << std::endl; 
 
 
-  trace.info() << "Computing Distance Map stats ...";
-  Statistic<double> statDistances(true); 
-  getStatsFromDistanceMap(statDistances, imageA, aMin, aMax, imageB, bMin, bMax, vm.count("statsFromFalsePosOnly") );
+
+
+     }
+
      
-  trace.info() << " [done] " << std::endl;
-  std::cout << "# Statistics from distances " << std::endl;
-  std::cout << "# Max(MinDistance(shape B to shape A) Mean(MinDistance(shape B to shape A) Variance(MinDistance(shape B to shape A) Mediane(MinDistance(shape B to shape A)  " << std::endl;
-  std::cout << statDistances.max() << " " << statDistances.mean()  << " " << statDistances.variance()  << "  "<< statDistances.median() << std::endl; 
+ 
+
+  }
   return 1;
 }
 
