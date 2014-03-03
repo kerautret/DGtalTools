@@ -31,7 +31,7 @@
 #include <DGtal/io/writers/VolWriter.h>
 #include <DGtal/helpers/StdDefs.h>
 #include <DGtal/images/Image.h>
-#include <DGtal/images/ImageContainerBySTLVector.h>
+#include <DGtal/images/ImageContainerBySTLMap.h>
 
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/parsers.hpp>
@@ -131,7 +131,7 @@ int main(int argc, char**argv)
   
   
   trace.beginBlock("Loading file");
-  typedef ImageContainerBySTLVector<Z3i::Domain, unsigned char>  MyImageC;
+  typedef ImageContainerBySTLMap<Z3i::Domain, unsigned char>  MyImageC;
 
   MyImageC  imageC = VolReader< MyImageC >::importVol ( filename );
   MyImageC  outputImage( Z3i::Domain( imageC.domain().lowerBound(),

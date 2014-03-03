@@ -32,7 +32,7 @@
 #include "DGtal/base/Common.h"
 #include "DGtal/helpers/StdDefs.h"
 #include "DGtal/base/BasicFunctors.h"
-#include "DGtal/images/ImageContainerBySTLVector.h"
+#include "DGtal/images/ImageContainerBySTLMap.h"
 #include "DGtal/io/writers/GenericWriter.h"
 #include "DGtal/io/readers/DicomReader.h"
 
@@ -49,7 +49,7 @@ namespace po = boost::program_options;
 
 int main( int argc, char** argv )
 {
-  typedef ImageContainerBySTLVector < Z3i::Domain, unsigned char > Image3D;
+  typedef ImageContainerBySTLMap < Z3i::Domain, unsigned char > Image3D;
 
   
   // parse command line ----------------------------------------------
