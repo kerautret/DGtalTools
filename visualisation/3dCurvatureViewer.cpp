@@ -69,13 +69,13 @@
 #include "DGtal/io/colormaps/GradientColorMap.h"
 #include <QtGui/QApplication>
 
-using namespace std;
-using namespace DGtal;
+ using namespace std;
+ using namespace DGtal;
 
-const Color  AXIS_COLOR_RED( 200, 20, 20, 255 );
-const Color  AXIS_COLOR_GREEN( 20, 200, 20, 255 );
-const Color  AXIS_COLOR_BLUE( 20, 20, 200, 255 );
-const double AXIS_LINESIZE = 0.05;
+ const Color  AXIS_COLOR_RED( 200, 20, 20, 255 );
+ const Color  AXIS_COLOR_GREEN( 20, 200, 20, 255 );
+ const Color  AXIS_COLOR_BLUE( 20, 20, 200, 255 );
+ const double AXIS_LINESIZE = 0.05;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -85,8 +85,8 @@ const double AXIS_LINESIZE = 0.05;
  *
  * @param param
  */
-void missingParam( std::string param )
-{
+ void missingParam( std::string param )
+ {
   trace.error() << " Parameter: " << param << " is required.";
   trace.info() << std::endl;
 }
@@ -98,12 +98,12 @@ int main( int argc, char** argv )
   // parse command line ----------------------------------------------
   po::options_description general_opt("Allowed options are");
   general_opt.add_options()
-    ("help,h", "display this message")
-    ("input-file,i", po::value< std::string >(), ".vol file")
-    ("radius,r",  po::value< double >(), "Kernel radius for IntegralInvariant" )
-    ("try,t",  po::value< unsigned int >()->default_value(150), "Max number of tries to find a proper bel" )
-    ("mode,m", po::value< std::string >()->default_value("mean"), "type of output : mean, gaussian, prindir1 or prindir2 (default mean)")
-    ("export,e", po::value< std::string >(), "Export the scene to specified OBJ filename." );
+  ("help,h", "display this message")
+  ("input-file,i", po::value< std::string >(), ".vol file")
+  ("radius,r",  po::value< double >(), "Kernel radius for IntegralInvariant" )
+  ("try,t",  po::value< unsigned int >()->default_value(150), "Max number of tries to find a proper bel" )
+  ("mode,m", po::value< std::string >()->default_value("mean"), "type of output : mean, gaussian, prindir1 or prindir2 (default mean)")
+  ("export,e", po::value< std::string >(), "Export the scene to specified OBJ filename." );
 
   bool parseOK = true;
   po::variables_map vm;
@@ -132,8 +132,8 @@ int main( int argc, char** argv )
   if( parseOK )
     mode =  vm["mode"].as< std::string >();
   if ( parseOK && ( mode.compare("gaussian") != 0 ) && ( mode.compare("mean") != 0 ) &&
-       ( mode.compare("prindir1") != 0 ) && ( mode.compare("prindir2") != 0 ))
-    {
+   ( mode.compare("prindir1") != 0 ) && ( mode.compare("prindir2") != 0 ))
+  {
     wrongMode = true;
     trace.error() << " The selected mode ("<<mode << ") is not defined."<<std::endl;
   }
@@ -142,16 +142,16 @@ int main( int argc, char** argv )
   if(!neededArgsGiven ||  wrongMode || !parseOK || vm.count("help") || argc <= 1 )
   {
     trace.info()<< "Visualisation of 3d curvature from .vol file using curvature from Integral Invariant" <<std::endl
-                << general_opt << "\n"
-                << "Basic usage: "<<std::endl
-                << "\t3dCurvatureViewer -i file.vol --radius 3 --mode mean"<<std::endl
-                << std::endl
-                << "Below are the different available modes: " << std::endl
-                << "\t - \"mean\" for the mean curvature" << std::endl
-                << "\t - \"gaussian\" for the Gaussian curvature" << std::endl
-                << "\t - \"prindir1\" for the first principal curvature direction" << std::endl
-                << "\t - \"prindir2\" for the second principal curvature direction" << std::endl
-                << std::endl;
+    << general_opt << "\n"
+    << "Basic usage: "<<std::endl
+    << "\t3dCurvatureViewer -i file.vol --radius 3 --mode mean"<<std::endl
+    << std::endl
+    << "Below are the different available modes: " << std::endl
+    << "\t - \"mean\" for the mean curvature" << std::endl
+    << "\t - \"gaussian\" for the Gaussian curvature" << std::endl
+    << "\t - \"prindir1\" for the first principal curvature direction" << std::endl
+    << "\t - \"prindir2\" for the second principal curvature direction" << std::endl
+    << std::endl;
     return 0;
   }
 
@@ -165,11 +165,11 @@ int main( int argc, char** argv )
   if(vm.count("export")){
     export_path = vm["export"].as< std::string >();
     if( export_path.find(".obj") == std::string::npos )
-      {
-        std::ostringstream oss; 
-        oss << export_path << ".obj" << endl; 
-        export_path = oss.str();
-      } 
+    {
+      std::ostringstream oss; 
+      oss << export_path << ".obj" << endl; 
+      export_path = oss.str();
+    } 
     myexport=true;
   }
   
@@ -215,17 +215,17 @@ int main( int argc, char** argv )
   unsigned int maxTries = vm["try"].as< unsigned int >();
   while( digSurf.size() < 2 * minsize || tries > maxTries )
   {
-      delete boundary;
-      bel = Surfaces< KSpace >::findABel( K, predicate, 10000 );
-      boundary = new Boundary( K, predicate, SurfelAdjacency< KSpace::dimension >( true ), bel );
-      digSurf = MyDigitalSurface( *boundary );
-      ++tries;
+    delete boundary;
+    bel = Surfaces< KSpace >::findABel( K, predicate, 10000 );
+    boundary = new Boundary( K, predicate, SurfelAdjacency< KSpace::dimension >( true ), bel );
+    digSurf = MyDigitalSurface( *boundary );
+    ++tries;
   }
 
   if( tries > 150 )
   {
-      std::cerr << "Can't found a proper bel. So .... I ... just ... kill myself." << std::endl;
-      return false;
+    std::cerr << "Can't found a proper bel. So .... I ... just ... kill myself." << std::endl;
+    return false;
   }
 
   typedef DepthFirstVisitor<MyDigitalSurface> Visitor;
@@ -317,13 +317,13 @@ int main( int argc, char** argv )
     for ( unsigned int i = 0; i < results.size(); ++i )
     {
       viewer << CustomColors3D( Color::Black, cmap_grad( results[ i ] ))
-             << *abegin2;
+      << *abegin2;
 
       if (myexport)
-        {
-          board << CustomColors3D( Color::Black, cmap_grad( results[ i ] ))
-                << K.unsigns(*abegin2);
-        }
+      {
+        board << CustomColors3D( Color::Black, cmap_grad( results[ i ] ))
+        << K.unsigns(*abegin2);
+      }
       ++abegin2;
     }
   }
@@ -369,61 +369,60 @@ int main( int argc, char** argv )
 
       Cell unsignedSurfel = K.uCell( K.sKCoords(*abegin2) );
       viewer << CustomColors3D( DGtal::Color(255,255,255,255),
-                                DGtal::Color(255,255,255,255))
-             << unsignedSurfel;
+        DGtal::Color(255,255,255,255))
+      << unsignedSurfel;
       if (myexport)
       {
         board << CustomColors3D( DGtal::Color(255,255,255,255),
-                                 DGtal::Color(255,255,255,255))
-              << unsignedSurfel;
+         DGtal::Color(255,255,255,255))
+        << unsignedSurfel;
       }
 
 
-      //ColumnVector normal = current.vectors.column(0).getNormalized(); // don't show the normal
+      //ColumnVector normal = current.vectors.column(0).getNormalized();
       ColumnVector curv1 = current.vectors.column(1).getNormalized();
       ColumnVector curv2 = current.vectors.column(2).getNormalized();
 
-      double eps = 0.01;
       RealPoint center = embedder( outer );
 
       if( ( mode.compare("prindir1") == 0 ) )
       {
         viewer.setLineColor(AXIS_COLOR_BLUE);
         viewer.addLine (
-              RealPoint(
-                center[0] -  0.5 * curv1[0],
+          RealPoint(
+            center[0] -  0.5 * curv1[0],
             center[1] -  0.5 * curv1[1],
             center[2] -  0.5 * curv1[2]
             ),
-            RealPoint(
-              center[0] +  0.5 * curv1[0],
+          RealPoint(
+            center[0] +  0.5 * curv1[0],
             center[1] +  0.5 * curv1[1],
             center[2] +  0.5 * curv1[2]
             ),
-            AXIS_LINESIZE );
+          AXIS_LINESIZE );
       }
       else
       {
         viewer.setLineColor(AXIS_COLOR_RED);
         viewer.addLine (
-              RealPoint(
-                center[0] -  0.5 * curv2[0],
+          RealPoint(
+            center[0] -  0.5 * curv2[0],
             center[1] -  0.5 * curv2[1],
             center[2] -  0.5 * curv2[2]
             ),
-            RealPoint(
-              center[0] +  0.5 * curv2[0],
+          RealPoint(
+            center[0] +  0.5 * curv2[0],
             center[1] +  0.5 * curv2[1],
             center[2] +  0.5 * curv2[2]
             ),
-            AXIS_LINESIZE );
+          AXIS_LINESIZE );
       }
 
       ++abegin2;
     }
     trace.endBlock();
 
-   
+    
   }
   viewer << Viewer3D<>::updateDisplay;
 
@@ -432,7 +431,7 @@ int main( int argc, char** argv )
     board.saveOBJ(export_path);
     trace.info() << "[done]" << std::endl;
   }
-    
+  
   delete boundary;
   return application.exec();
 }
