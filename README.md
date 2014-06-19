@@ -91,9 +91,12 @@ Estimators
 <td><img height=130 src="https://cloud.githubusercontent.com/assets/772865/2646108/f515b0a2-bf39-11e3-96f8-c7606173f43b.png"></td>
 </tr>
 <tr>
+<<<<<<< Updated upstream
 <td>Illustration of curvatureScaleSpaceBCC </td>
+=======
+<td colspan="2"> Illustration of generic3dNormalEstimators on VCM estimator applied on smooth and noisy shapes.</td>
+>>>>>>> Stashed changes
 </tr>
-
 </table>
 
 ShapeGenerator
