@@ -53,6 +53,7 @@ Utilities to convert various simple file formats:
   - longvol2vol: convert longvol to vol file using different conversion policies.  
   - ofs2off: convert OFS mesh format towards a OFF variant.
   - pgm2freeman: to extract a freeman chain contour from a grayscale image.
+  - freeman2pgm: transform one or several freeman chains into a pgm file by filling their interior areas.
   - raw2vol and vol2raw: transform 3D volumes files from (resp. to) raw to vol.
   - raw2HDF5: convert raw image to HDF5.
   - slice2vol: tool to merge slices into one 3d volumic file.
@@ -72,7 +73,7 @@ DistanceTransform
 
 Estimators
 ----------
-
+  - generic3dNormalEstimators: Computes a normal vector field over a digitized 3D implicit surface for several estimators (II|VCM|Trivial|True).
   - 2dLocalEstimators: program to compare local curvature/tangent estimators on implicit shapes
     - Maximal DSS based estimators
     - Maximal DCA based estimators
@@ -88,14 +89,17 @@ Estimators
   - vol2normalField: compute the normal vector field of a given vol file .
 <table>
 <tr>
-<td><img height=130 src="https://cloud.githubusercontent.com/assets/772865/2646108/f515b0a2-bf39-11e3-96f8-c7606173f43b.png"></td>
+<td colspan="2"><img height=130 src="https://cloud.githubusercontent.com/assets/772865/2646108/f515b0a2-bf39-11e3-96f8-c7606173f43b.png"></td>
 </tr>
 <tr>
-<<<<<<< Updated upstream
-<td>Illustration of curvatureScaleSpaceBCC </td>
-=======
+<td colspan="2">Illustration of curvatureScaleSpaceBCC </td>
+</tr>
+<tr>
+<td align=center ><img height=130 src="https://cloud.githubusercontent.com/assets/793707/2996392/d3ee9e58-dced-11e3-98a0-72233927aaf6.jpg"> </td>
+<td align=center ><img height=130 src="https://cloud.githubusercontent.com/assets/772865/3311642/03f29044-f6c7-11e3-8981-120369b3e8bd.png"> </td>
+</tr>
+<tr>
 <td colspan="2"> Illustration of generic3dNormalEstimators on VCM estimator applied on smooth and noisy shapes.</td>
->>>>>>> Stashed changes
 </tr>
 </table>
 
