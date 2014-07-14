@@ -1,6 +1,6 @@
 DGtalTools
 ==========
-
+ 
 DGtalTools is a separate github project containing tools constructed
 using DGtal library. The main goal of this part is to gather simple
 and useful tools exploiting the structures and algorithms defined in
