@@ -401,9 +401,8 @@ int main( int argc, char** argv )
       }
 
       ASSERT( min <= max );
-
       typedef GradientColorMap< Quantity > Gradient;
-      Gradient cmap_grad( min, max );
+      Gradient cmap_grad( min, (max==min)? max+1: max );
       cmap_grad.addColor( Color( 50, 50, 255 ) );
       cmap_grad.addColor( Color( 255, 0, 0 ) );
       cmap_grad.addColor( Color( 255, 255, 10 ) );
