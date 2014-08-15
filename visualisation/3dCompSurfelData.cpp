@@ -26,8 +26,11 @@
  */
 
 ///////////////////////////////////////////////////////////////////////////////
+
 #include <iostream>
 #include <QtGui/qapplication.h>
+#include <QGLViewer/qglviewer.h>
+#include <stdio.h>
 
 #include "DGtal/base/Common.h"
 #include "DGtal/helpers/StdDefs.h"
@@ -58,6 +61,24 @@ using namespace Z3i;
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace po = boost::program_options;
+
+template < typename Space = DGtal::Z3i::Space, typename KSpace = DGtal::Z3i::KSpace>
+struct ViewerSnap: DGtal::Viewer3D <Space, KSpace> 
+{
+  
+  ViewerSnap(const KSpace &KSEmb, bool saveSnap): Viewer3D<Space, KSpace>(KSEmb), mySaveSnap(saveSnap){
+  };
+   
+  virtual  void
+  init(){
+    DGtal::Viewer3D<>::init();
+    if(mySaveSnap){
+      QObject::connect(this, SIGNAL(drawFinished(bool)), this, SLOT(saveSnapshot(bool)));
+    }
+  };
+  bool mySaveSnap;
+};
+
 
 template < typename Point>
 void
@@ -99,7 +120,9 @@ int main( int argc, char** argv )
     ("reference,r", po::value<std::string>(), "input reference file: sdpa (sequence of discrete points with attribute)" )
     ("compAccordingLabels,l", "apply the comparisos only on points with same labels (by default fifth colomn)" )
     ("drawSurfelAssociations,a", "Draw the surfel association." )
-    ("fixMaxColorValue", po::value<double>(), "fix the maximal color value for the scale error display (else the scale is set from the maximal value)" ) 
+    ("noWindows,n", "Don't display Viewer windows." )
+    ("doSnapShotAndExit,d", po::value<std::string>(), "save display snapshot into file." )
+    ("fixMaxColorValue", po::value<double>(), "fix the maximal color value for the scale error display (else the scale is set from the maximal value)" )
     ("labelIndex", po::value<unsigned int>(), "set the index of the label (by default set to 4)  " ) 
     ("SDPindex", po::value<std::vector <unsigned int> >()->multitoken(), "specify the sdp index (by default 0,1,2,3).");
 
@@ -234,12 +257,16 @@ int main( int argc, char** argv )
 
   
   QApplication application(argc,argv);
-  typedef Viewer3D<Z3i::Space, Z3i::KSpace> Viewer;
+  typedef ViewerSnap<> Viewer;
    
 
-  Viewer viewer( K );
+  Viewer viewer(K, vm.count("doSnapShotAndExit"));
+  if(vm.count("doSnapShotAndExit")){
+    viewer.setSnapshotFileName(QString(vm["doSnapShotAndExit"].as<std::string>().c_str()));
+  }
   viewer.setWindowTitle("3dCompSurfel Viewer");
   viewer.show();
+  viewer.restoreStateFromFile();
   
   Statistic<double> statErrors(true);
   
@@ -285,9 +312,27 @@ int main( int argc, char** argv )
   
   statErrors.terminate();
   trace.info()  << statErrors;
-  //  trace.info() << "Median error " << statErrors.median() << std::endl;
+  viewer << Viewer::updateDisplay;
+  if(vm.count("doSnapShotAndExit")){
+    // Appy cleaning just save the last snap
+    std::string name = vm["doSnapShotAndExit"].as<std::string>();
+    std::string extension = name.substr(name.find_last_of(".") + 1);
+    std::string basename = name.substr(0, name.find_last_of("."));
+    for(unsigned int i=0; i< viewer.snapshotCounter()-1; i++){
+      std::stringstream s; 
+      s << basename << "-"<< setfill('0') << setw(4)<<  i << "." << extension; 
+      trace.info() << "erase temp file: " << s.str() << std::endl;
+      remove(s.str().c_str());
+    }
+    std::stringstream s; 
+    s << basename << "-"<< setfill('0') << setw(4)<<  viewer.snapshotCounter()-1 << "." << extension;
+    rename(s.str().c_str(), name.c_str()); 
+    return 0;
+  }
   
-  viewer << Viewer3D<>::updateDisplay;
-  return application.exec();
-
+  if(vm.count("noWindows")){
+    return 0;
+  }else{
+    return application.exec();
+  }
 }
