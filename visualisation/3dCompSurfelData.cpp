@@ -120,6 +120,7 @@ int main( int argc, char** argv )
     ("reference,r", po::value<std::string>(), "input reference file: sdpa (sequence of discrete points with attribute)" )
     ("compAccordingLabels,l", "apply the comparisos only on points with same labels (by default fifth colomn)" )
     ("drawSurfelAssociations,a", "Draw the surfel association." )
+    ("fileMeasureOutput,o", po::value<std::string>(), "specify the output file to store (append) the error stats else the result is given to std output. " )
     ("noWindows,n", "Don't display Viewer windows." )
     ("doSnapShotAndExit,d", po::value<std::string>(), "save display snapshot into file." )
     ("fixMaxColorValue", po::value<double>(), "fix the maximal color value for the scale error display (else the scale is set from the maximal value)" )
@@ -269,7 +270,11 @@ int main( int argc, char** argv )
   viewer.restoreStateFromFile();
   
   Statistic<double> statErrors(true);
-  
+  std::ofstream outputStatStream; 
+  if(vm.count("fileMeasureOutput")){
+    outputStatStream.open(vm["fileMeasureOutput"].as<std::string>().c_str(), ios::app );
+  }
+
 
   
   double maxSqError=0;
@@ -311,7 +316,12 @@ int main( int argc, char** argv )
   }
   
   statErrors.terminate();
-  trace.info()  << statErrors;
+  if(vm.count("fileMeasureOutput")){
+    outputStatStream << "input= " <<  inputFilename << " reference=" << referenceFilename << " " ; 
+    outputStatStream << statErrors << std::endl;
+  }else{
+    trace.info()  << statErrors;
+  }
   viewer << Viewer::updateDisplay;
   if(vm.count("doSnapShotAndExit")){
     // Appy cleaning just save the last snap
