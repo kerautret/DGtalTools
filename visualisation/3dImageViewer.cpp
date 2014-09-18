@@ -97,7 +97,9 @@ int main( int argc, char** argv )
 #ifdef WITH_ITK
     ("dicomMin", po::value<int>()->default_value(-1000), "set minimum density threshold on Hounsfield scale")
     ("dicomMax", po::value<int>()->default_value(3000), "set maximum density threshold on Hounsfield scale")
-#endif    
+#endif 
+    ("rescaleImageMin", po::value<unsigned int>()->default_value(0), "rescale the intensity image from the scale (min, max) to unsigned char scale")
+    ("rescaleImageMax", po::value<unsigned int >()->default_value(255), "rescale the intensity image from the scale (min, max) to unsigned char scale")
     ("transparency,t",  po::value<uint>()->default_value(255), "transparency") ; 
   
   bool parseOK=true;
@@ -122,6 +124,7 @@ int main( int argc, char** argv )
       trace.error() << " The file name was defined" << endl;      
       return 0;
     }
+
   string inputFilename = vm["input"].as<std::string>();
   int thresholdMin = vm["thresholdMin"].as<int>();
   int thresholdMax = vm["thresholdMax"].as<int>();
@@ -168,7 +171,12 @@ int main( int argc, char** argv )
                                                                                                    0, 255) ) : 
     GenericReader<Image3D>::import( inputFilename );
 #else
-  Image3D image = GenericReader<Image3D>::import( inputFilename );
+  unsigned char scaleMin = (unsigned char) vm["rescaleImageMin"].as<unsigned int>();
+  unsigned char scaleMax = (unsigned char) vm["rescaleImageMax"].as<unsigned int>();
+  typedef DGtal::functors::Rescaling<unsigned char ,unsigned char > RescalFCT;
+  Image3D image = GenericReader<Image3D>::importWithValueFunctor( inputFilename,  RescalFCT(scaleMin,
+                                                                                            scaleMax,
+                                                                                            0, 255) );
 #endif
   Domain domain = image.domain();
   

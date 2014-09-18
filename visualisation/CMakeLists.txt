@@ -49,6 +49,10 @@ QT4_WRAP_CPP(sliceViewer_HEADERS_MOC sliceViewer.h OPTIONS -DBOOST_TT_HAS_OPERAT
 ADD_EXECUTABLE(sliceViewer sliceViewer.cpp  ${sliceViewer_HEADERS_MOC}  
     ${ui_sliceViewer_FORMS_HEADERS} )
  target_link_libraries ( sliceViewer  ${DGTAL_LIBRARIES}  ${DGtalToolsLibDependencies})   
+  install(TARGETS sliceViewer 
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
 
 endif ( WITH_VISU3D_QGLVIEWER   )
 
