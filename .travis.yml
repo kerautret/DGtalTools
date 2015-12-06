@@ -16,20 +16,26 @@ env:
 addons:
   apt:
     packages:
+    - libhdf5-serial-dev
     - libboost-program-options-dev
+    - libcairo2-dev
+    - doxygen
+    - doxygen-latex
+    - graphviz
     - libboost-system-dev
+    - libgmp-dev
+    - libgdcm2-dev 
+    - libgraphicsmagick++1-dev
     - libqglviewer-qt4-dev
-    - libinsighttoolkit3-dev
-    - libgdcm2-dev
-
-
+    - libinsighttoolkit3-dev 
 before_script:
   - git clone git://github.com/DGtal-team/DGtal.git
   - cd DGtal
-  - cmake . $DGTALTYPE  
-  - make 
+  - mkdir LibDGtal
+  - cmake . $DGTALTYPE -DCMAKE_INSTALL_PREFIX:$PWD/LibDGtal 
+  - make & make DESTDIR=$PWD/LibDGtal install
   - cd ..
 
 script: 
-   - cmake . -DCMAKE_BUILD_TYPE=Debug -DDGtal_DIR=$PWD//DGtal/build/
+   - cmake . -DCMAKE_BUILD_TYPE=Debug -DDGtal_DIR=$PWD/LibDGtal
    - make
