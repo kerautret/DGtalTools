@@ -32,10 +32,11 @@ addons:
 before_script:
   - git clone git://github.com/DGtal-team/DGtal.git
   - cd DGtal
-  - cmake . $DGTALTYPE 
-  - make DGtal && make DGtalIO 
-  - cd ..
+  - mkdir build; cd build
+  - cmake .. $DGTALTYPE 
+  - make
+  - cd ../../
 
 script: 
-   - cmake . -DCMAKE_BUILD_TYPE=Debug -DDGtal_DIR=../DGtal
+   - cmake . -DCMAKE_BUILD_TYPE=Debug -DDGtal_DIR=$HOME/DGtal/build/
    - make
