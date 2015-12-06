@@ -40,5 +40,6 @@ before_script:
   - cd ../../DGtalTools
 
 script: 
+   - cp $HOME/LibDGtal/usr/local/share/DGtal/CMake/DGtalConfig.cmake ./
    - cmake . -DCMAKE_BUILD_TYPE=Debug -DDGtal_DIR=$HOME/DGtal/build/InstallFiles/ -DCMAKE_MODULE_PATH=$HOME/LibDGtal/usr/local/share/DGtal/CMake/
    - make
