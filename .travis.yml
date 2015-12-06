@@ -30,6 +30,7 @@ addons:
     - libinsighttoolkit3-dev 
 
 before_script:
+  - cd ..
   - git clone git://github.com/DGtal-team/DGtal.git
   - mkdir LibDGtal;
   - cd DGtal
