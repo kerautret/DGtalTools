@@ -1,8 +1,14 @@
 language: cpp
 
+sudo: false
+
+
 compiler:
   - gcc
   - clang
+
+cache: apt
+
 
 env:
   - DGTALTYPE="-DBUILD_EXAMPLES=OFF -DDGTAL_BUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Debug -DWITH_QGLVIEWER=true -DWITH_ITK=true"
@@ -15,7 +21,7 @@ addons:
     - libqglviewer-qt4-dev
     - libinsighttoolkit3-dev
     - libgdcm2-dev
-    - fftw3
+
 
 before_script:
   - git clone git://github.com/DGtal-team/DGtal.git
@@ -25,5 +31,5 @@ before_script:
   - cd ..
 
 script: 
-   - cmake . -DCMAKE_BUILD_TYPE=Debug -DDGtal_DIR=../DGtal/build/
+   - cmake . -DCMAKE_BUILD_TYPE=Debug -DDGtal_DIR=$PWD//DGtal/build/
    - make
