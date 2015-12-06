@@ -36,10 +36,9 @@ before_script:
   - cd DGtal
   - mkdir build; cd build
   - cmake .. $DGTALTYPE 
-  - make  && make DESTDIR=$HOME/LibDGtal install
+  - make 
   - cd ../../DGtalTools
 
 script: 
-   - cp $HOME/LibDGtal/usr/local/share/DGtal/CMake/DGtalConfig.cmake ./
-   - cmake . -DCMAKE_BUILD_TYPE=Debug -DDGtal_DIR=$HOME/DGtal/build/InstallFiles/ -DCMAKE_MODULE_PATH=$HOME/LibDGtal/usr/local/share/DGtal/CMake/
-   - make
+  - cmake . -DCMAKE_BUILD_TYPE=Debug -DDGtal_DIR=$HOME/DGtal/build
+  - make
