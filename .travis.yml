@@ -28,12 +28,13 @@ addons:
     - libgraphicsmagick++1-dev
     - libqglviewer-qt4-dev
     - libinsighttoolkit3-dev 
+
 before_script:
   - git clone git://github.com/DGtal-team/DGtal.git
   - cd DGtal
   - mkdir LibDGtal
   - cmake . $DGTALTYPE -DCMAKE_INSTALL_PREFIX:PATH=$PWD/LibDGtal 
-  - make & make DESTDIR=$PWD/LibDGtal install
+  - make DGtal && make DGtalIO  && make DESTDIR=$PWD/LibDGtal install
   - cd ..
 
 script: 
