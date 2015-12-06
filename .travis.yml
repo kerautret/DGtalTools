@@ -15,6 +15,7 @@ addons:
     - libqglviewer-qt4-dev
     - libinsighttoolkit3-dev
     - libgdcm2-dev
+    - fftw3
 
 before_script:
   - git clone git://github.com/DGtal-team/DGtal.git
