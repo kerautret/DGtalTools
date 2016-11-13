@@ -418,17 +418,20 @@ int main( int argc, char** argv )
       
     }
   
-    
-    aBoard.setPenColor(Color::Red);
-    aBoard.setFillColor(Color::Gray);
+
     aBoard.setLineStyle (LibBoard::Shape::SolidStyle );
     aBoard.setLineWidth (lineWidth);
-    if(!filled){
+    if(filled){
+      aBoard.setPenColor(Color::Gray);
+      aBoard.fillPolyline(contourPt);
+      aBoard.setPenColor(Color::Red);
       aBoard.drawPolyline(contourPt);
     }else{
-      aBoard.fillPolyline(contourPt);
+      aBoard.setPenColor(Color::Red);
+      aBoard.drawPolyline(contourPt);
     }
     if(vm.count("drawPointOfIndex")){
+      aBoard.setPenColor(Color::Blue);
       int index = vm["drawPointOfIndex"].as<int>();
       double size = vm["pointSize"].as<double>();
       aBoard.fillCircle((double)(contourPt.at(index).x), (double)(contourPt.at(index).y), size);
