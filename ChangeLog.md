@@ -16,7 +16,8 @@
      online demonstration). It also contains a new option to display a mesh in 
      3DvolViewer. 
      (Bertrand Kerautret, [#282](https://github.com/DGtal-team/DGtalTools/pull/282))
-
+   - displayContours: Fix a bad display when using SDP input option.
+     (Bertrand Kerautret, [#286](https://github.com/DGtal-team/DGtalTools/pull/286))
 
 # DGtalTools 0.9.2
 
