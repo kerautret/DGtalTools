@@ -1,19 +1,49 @@
+/**
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Lesser General Public License as
+ *  published by the Free Software Foundation, either version 3 of the
+ *  License, or  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **/
+/**
+ * @file 3dVolRayTracer.cpp
+ * @ingroup Tools
+ * @author Jacques-Olivier Lachaud (\c jacques-olivier.lachaud@univ-savoie.fr )
+ * Laboratory of Mathematics (CNRS, UMR 5127), University of Savoie, France
+ *
+ * @date 2017/02/28
+ *
+ * A tool file named 3dVolRayTracer.
+ *
+ * This file is part of the DGtal library.
+ */
+
+///////////////////////////////////////////////////////////////////////////////
 #include <qapplication.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
-#include "Viewer.h"
-#include "Scene.h"
-#include "Sphere.h"
-#include "Material.h"
-#include "PointLight.h"
-#include "PeriodicPlane.h"
-#include "WaterPlane.h"
-#include "Triangle.h"
+
+#include "raytracer/Viewer.h"
+#include "raytracer/Scene.h"
+#include "raytracer/Sphere.h"
+#include "raytracer/Material.h"
+#include "raytracer/PointLight.h"
+#include "raytracer/PeriodicPlane.h"
+#include "raytracer/WaterPlane.h"
+#include "raytracer/Triangle.h"
 
 using namespace std;
-using namespace rt;
+using namespace DGtal;
 
 void addBubble( Scene& scene, Point3 c, Real r, Material transp_m )
 {
@@ -121,7 +151,7 @@ int main(int argc, char** argv)
   scene.addLight( light0 );
   // scene.addLight( light1 );
 
-  // shallowSand( scene, 1.0f );
+  shallowSand( scene, 1.0f );
   // groundWhiteAndBlack( scene, 0.0f );
   // groundBlackAndGrey( scene, Point3( 0, 0, 0 ) );
   // leftBuilding( scene, 10.0 );
