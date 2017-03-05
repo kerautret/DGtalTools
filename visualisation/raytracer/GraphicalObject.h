@@ -36,56 +36,78 @@
 /** Prevents repeated inclusion of headers. */
 #define GraphicalObject_h
 
-#include "Viewer.h"
-#include "PointVector.h"
-#include "Material.h"
-#include "Ray.h"
+#include "raytracer/Ray.h"
+#include "raytracer/RayTracerViewerExtension.h"
+#include "raytracer/Material.h"
 
 namespace DGtal {
 
-namespace rt {
+  namespace rt {
 
-  /// This is an interface specifying methods that any ray-traced
-  /// graphical object should have. It is also drawable to be seen in
-  /// QGLViewer window.  Concrete exemples of a GraphicalObject
-  /// include Spheres.
-  struct GraphicalObject {
+    /// This is an interface specifying methods that any ray-traced
+    /// graphical object should have. It is also drawable to be seen in
+    /// QGLViewer window.  Concrete exemples of a GraphicalObject
+    /// include Spheres.
+    struct GraphicalObject {
+      /// Temporary float array holder.
+      GLfloat tmp[ 4 ];
+      /// Default constructor. Nothing to do.
+      GraphicalObject() {}
 
-    /// Default constructor. Nothing to do.
-    GraphicalObject() {}
+      /// Virtual destructor since object contains virtual methods.
+      virtual ~GraphicalObject() {}
 
-    /// Virtual destructor since object contains virtual methods.
-    virtual ~GraphicalObject() {}
+      /// Utility to convert Vector3 to GLfloat[3]
+      inline
+      GLfloat* GL( const Vector3& v )
+      {
+        tmp[ 0 ] = (float) v[ 0 ];
+        tmp[ 1 ] = (float) v[ 1 ];
+        tmp[ 2 ] = (float) v[ 2 ];
+        return tmp;
+      }
 
-    /// This method is called by Scene::init() at the beginning of the
-    /// display in the OpenGL window. May be useful for some
-    /// precomputations.
-    virtual void init( Viewer& /* viewer */ ) = 0;
+      /// Utility to convert Vector4 to GLfloat[4]
+      inline
+      GLfloat* GL( const Vector4& v )
+      {
+        tmp[ 0 ] = (float) v[ 0 ];
+        tmp[ 1 ] = (float) v[ 1 ];
+        tmp[ 2 ] = (float) v[ 2 ];
+        tmp[ 3 ] = (float) v[ 3 ];
+        return tmp;
+      }
+      /// This method is called by Scene::init() at the beginning of the
+      /// display in the OpenGL window. May be useful for some
+      /// precomputations.
+      virtual void init( RTViewer& /* viewer */ ) = 0;
 
-    /// This method is called by Scene::draw() at each frame to
-    /// redisplay objects in the OpenGL window.
-    virtual void draw( Viewer& /* viewer */ ) = 0;
+      /// This method is called by Scene::draw() at each frame to
+      /// redisplay objects in the OpenGL window.
+      virtual void draw( RTViewer& /* viewer */ ) = 0;
 
-    /// @return the normal vector at point \a p on the object (\a p
-    /// should be on or close to the sphere).
-    virtual Vector3 getNormal( Point3 p ) = 0;
+      /// @return the normal vector at point \a p on the object (\a p
+      /// should be on or close to the sphere).
+      virtual Vector3 getNormal( Point3 p ) = 0;
 
-    /// @return the material associated to this part of the object
-    virtual Material getMaterial( Point3 p ) = 0;
+      /// @return the material associated to this part of the object
+      virtual Material getMaterial( Point3 p ) = 0;
 
-    /// @param[in] ray the incoming ray
-    /// @param[out] returns the point of intersection with the object
-    /// (if any), or the closest point to it.
-    ///
-    /// @return either a real < 0.0 if there is an intersection, or a
-    /// kind of distance to the closest point of intersection.
-    virtual Real rayIntersection( const Ray& ray, Point3& p ) = 0;
+      /// @param[in] ray the incoming ray
+      /// @param[out] returns the point of intersection with the object
+      /// (if any), or the closest point to it.
+      ///
+      /// @return either a real < 0.0 if there is an intersection, or a
+      /// kind of distance to the closest point of intersection.
+      virtual Real rayIntersection( const Ray& ray, Point3& p ) = 0;
                     
+    };
 
-  };
-
-} // namespace rt
-
+  } // namespace rt
 } // namespace DGtal
 
-#endif // #define _GRAPHICAL_OBJECT_H_
+#endif // !defined GraphicalObject_h
+
+#undef GraphicalObject_RECURSES
+#endif // else defined(GraphicalObject_RECURSES)
+

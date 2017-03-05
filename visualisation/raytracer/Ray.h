@@ -17,7 +17,7 @@
 #pragma once
 
 /**
- * @file GraphicalObject.h
+ * @file Ray.h
  * @author Jacques-Olivier Lachaud (\c jacques-olivier.lachaud@univ-savoie.fr )
  * Laboratory of Mathematics (CNRS, UMR 5127), University of Savoie, France
  *
@@ -26,30 +26,41 @@
  * This file is part of the DGtal library.
  */
 
-#if defined(GraphicalObject_RECURSES)
-#error Recursive header files inclusion detected in GraphicalObject.h
-#else // defined(GraphicalObject_RECURSES)
+#if defined(Ray_RECURSES)
+#error Recursive header files inclusion detected in Ray.h
+#else // defined(Ray_RECURSES)
 /** Prevents recursive inclusion of headers. */
-#define GraphicalObject_RECURSES
+#define Ray_RECURSES
 
-#if !defined GraphicalObject_h
+#if !defined Ray_h
 /** Prevents repeated inclusion of headers. */
-#define GraphicalObject_h
+#define Ray_h
 
-#include "DGtal/kernel/SpaceND."
+#include "DGtal/kernel/SpaceND.h"
+#include "DGtal/topology/KhalimskySpaceND.h"
 
 
 namespace DGtal {
   /// Namespace RayTracer
   namespace rt {
-    
-    typedef SpaceND<2>          Space2;
+    typedef int                 Integer;
+    typedef SpaceND<2,int>      Space2;
     typedef Space2::Point       Point2i;
+    typedef Space2::RealVector  Vector2;
+    typedef Space2::RealPoint   Point2;
 
-    typedef SpaceND<3>          Space3;
+    typedef SpaceND<3,int>      Space3;
+    typedef KhalimskySpaceND<3,int> KSpace3;
     typedef Space3::Point       Point3i;
     typedef Space3::RealVector  Vector3;
     typedef Space3::RealPoint   Point3;
+
+    typedef SpaceND<4,int>      Space4;
+    typedef KhalimskySpaceND<4,int> KSpace4;
+    typedef Space4::Point       Point4i;
+    typedef Space4::RealVector  Vector4;
+    typedef Space4::RealPoint   Point4;
+
     typedef Vector3::Component  Real;
 
     /// This structure stores a ray having an origin and a direction. It
@@ -77,4 +88,8 @@ namespace DGtal {
   } // namespace rt
 } // namespace DGtal
 
-#endif // #define _RAY_H_
+#endif // !defined Ray_h
+
+#undef Ray_RECURSES
+#endif // else defined(Ray_RECURSES)
+

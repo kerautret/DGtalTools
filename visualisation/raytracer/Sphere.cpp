@@ -1,68 +1,100 @@
 /**
-@file Sphere.cpp
-*/
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Lesser General Public License as
+ *  published by the Free Software Foundation, either version 3 of the
+ *  License, or  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **/
+/**
+ * @file Sphere.cpp
+ * @author Jacques-Olivier Lachaud (\c jacques-olivier.lachaud@univ-savoie.fr )
+ * Laboratory of Mathematics (CNRS, UMR 5127), University of Savoie, France
+ *
+ * @date 2017/02/28
+ *
+ * This file is part of the DGtal library.
+ */
+
+///////////////////////////////////////////////////////////////////////////////
 #include <cmath>
-#include "Sphere.h"
+#include "raytracer/Sphere.h"
 
 void
-rt::Sphere::draw( Viewer& /* viewer */ )
+DGtal::rt::Sphere::init( RTViewer& viewer )
 {
   Material m = material;
-  // Taking care of south pole
-  glBegin( GL_TRIANGLE_FAN );
-  glColor4fv( m.ambient );
-  glMaterialfv(GL_FRONT, GL_DIFFUSE, m.diffuse);
-  glMaterialfv(GL_FRONT, GL_SPECULAR, m.specular);
-  glMaterialf(GL_FRONT, GL_SHININESS, m.shinyness );
-  Point3 south_pole = localize( -90, 0 );
-  glNormal3fv( getNormal( south_pole ) );
-  glVertex3fv( south_pole );
-  for ( int x = 0; x <= NLON; ++x )
-    {
-      Point3 p = localize( -90 + 180/NLAT, x * 360 / NLON );
-      glNormal3fv( getNormal( p ) );
-      glVertex3fv( p );
-    }
-  glEnd();
-  // Taking care of in-between poles
-  for ( int y = 1; y < NLAT - 1; ++y )
-    {
-      glBegin( GL_QUAD_STRIP);
-      glColor4fv( m.ambient );
-      glMaterialfv(GL_FRONT, GL_DIFFUSE, m.diffuse);
-      glMaterialfv(GL_FRONT, GL_SPECULAR, m.specular);
-      glMaterialf(GL_FRONT, GL_SHININESS, m.shinyness );
-      for ( int x = 0; x <= NLON; ++x )
-        {
-          Point3 p = localize( -90 + y*180/NLAT,     x * 360 / NLON );
-          Point3 q = localize( -90 + (y+1)*180/NLAT, x * 360 / NLON );
-          glNormal3fv( getNormal( p ) );
-          glVertex3fv( p );
-          glNormal3fv( getNormal( q ) );
-          glVertex3fv( q );
-        }
-      glEnd();
-    }
-  // Taking care of north pole
-  glBegin( GL_TRIANGLE_FAN );
-  glColor4fv( m.ambient );
-  glMaterialfv(GL_FRONT, GL_DIFFUSE, m.diffuse);
-  glMaterialfv(GL_FRONT, GL_SPECULAR, m.specular);
-  glMaterialf(GL_FRONT, GL_SHININESS, m.shinyness );
-  Point3 north_pole = localize( 90, 0 );
-  glNormal3fv( getNormal( north_pole ) );
-  glVertex3fv( north_pole );
-  for ( int x = NLON; x >= 0; --x )
-    {
-      Point3 p = localize( -90 + (NLAT-1)*180/NLAT, x * 360 / NLON );
-      glNormal3fv( getNormal( p ) );
-      glVertex3fv( p );
-    }
-  glEnd();
+  viewer.setFillColor( m.diffuse ); 
+  viewer.addBall( center, radius, 20 );
 }
 
-rt::Point3
-rt::Sphere::localize( Real latitude, Real longitude ) const
+void
+DGtal::rt::Sphere::draw( RTViewer& /* viewer */ )
+{
+  // //std::cout << "[DGtal::rt::Sphere::draw]" << std::endl;
+  // Material m = material;
+  // // Taking care of south pole
+  // glBegin( GL_TRIANGLE_FAN );
+  // glColor4fv( m.ambient );
+  // glMaterialfv(GL_FRONT, GL_DIFFUSE, m.diffuse);
+  // glMaterialfv(GL_FRONT, GL_SPECULAR, m.specular);
+  // glMaterialf(GL_FRONT, GL_SHININESS, m.shinyness );
+  // Point3 south_pole = localize( -90, 0 );
+  // glNormal3fv( GL( getNormal( south_pole ) ) );
+  // glVertex3fv( GL( south_pole ) );
+  // for ( int x = 0; x <= NLON; ++x )
+  //   {
+  //     Point3 p = localize( -90 + 180/NLAT, x * 360 / NLON );
+  //     glNormal3fv( GL( getNormal( p ) ) );
+  //     glVertex3fv( GL( p ) );
+  //   }
+  // glEnd();
+  // // Taking care of in-between poles
+  // for ( int y = 1; y < NLAT - 1; ++y )
+  //   {
+  //     glBegin( GL_QUAD_STRIP);
+  //     glColor4fv( m.ambient );
+  //     glMaterialfv(GL_FRONT, GL_DIFFUSE, m.diffuse);
+  //     glMaterialfv(GL_FRONT, GL_SPECULAR, m.specular);
+  //     glMaterialf(GL_FRONT, GL_SHININESS, m.shinyness );
+  //     for ( int x = 0; x <= NLON; ++x )
+  //       {
+  //         Point3 p = localize( -90 + y*180/NLAT,     x * 360 / NLON );
+  //         Point3 q = localize( -90 + (y+1)*180/NLAT, x * 360 / NLON );
+  //         glNormal3fv( GL( getNormal( p ) ) );
+  //         glVertex3fv( GL( p ) );
+  //         glNormal3fv( GL( getNormal( q ) ) );
+  //         glVertex3fv( GL( q ) );
+  //       }
+  //     glEnd();
+  //   }
+  // // Taking care of north pole
+  // glBegin( GL_TRIANGLE_FAN );
+  // glColor4fv( m.ambient );
+  // glMaterialfv(GL_FRONT, GL_DIFFUSE, m.diffuse);
+  // glMaterialfv(GL_FRONT, GL_SPECULAR, m.specular);
+  // glMaterialf(GL_FRONT, GL_SHININESS, m.shinyness );
+  // Point3 north_pole = localize( 90, 0 );
+  // glNormal3fv( GL( getNormal( north_pole ) ) );
+  // glVertex3fv( GL( north_pole ) );
+  // for ( int x = NLON; x >= 0; --x )
+  //   {
+  //     Point3 p = localize( -90 + (NLAT-1)*180/NLAT, x * 360 / NLON );
+  //     glNormal3fv( GL( getNormal( p ) ) );
+  //     glVertex3fv( GL( p ) );
+  //   }
+  // glEnd();
+}
+
+DGtal::rt::Point3
+DGtal::rt::Sphere::localize( Real latitude, Real longitude ) const
 {
   static const Real conv_deg_rad = 2.0 * M_PI / 360.0;
   latitude  *= conv_deg_rad;
@@ -73,8 +105,8 @@ rt::Sphere::localize( Real latitude, Real longitude ) const
                        sin( latitude ) );
 }
 
-rt::Vector3
-rt::Sphere::getNormal( Point3 p )
+DGtal::rt::Vector3
+DGtal::rt::Sphere::getNormal( Point3 p )
 {
   Vector3 u = p - center;
   Real   l2 = u.dot( u );
@@ -82,14 +114,14 @@ rt::Sphere::getNormal( Point3 p )
   return u;
 }
 
-rt::Material
-rt::Sphere::getMaterial( Point3 /* p */ )
+DGtal::rt::Material
+DGtal::rt::Sphere::getMaterial( Point3 /* p */ )
 {
   return material; // the material is constant along the sphere.
 }
 
-rt::Real
-rt::Sphere::rayIntersection( const Ray& ray, Point3& p )
+DGtal::rt::Real
+DGtal::rt::Sphere::rayIntersection( const Ray& ray, Point3& p )
 {
   // Calcul de la distance d'intersection
   Vector3 pa = center - ray.origin;

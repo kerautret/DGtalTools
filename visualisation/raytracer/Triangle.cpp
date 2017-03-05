@@ -1,34 +1,64 @@
 /**
-@file Triangle.cpp
-*/
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Lesser General Public License as
+ *  published by the Free Software Foundation, either version 3 of the
+ *  License, or  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **/
+/**
+ * @file Triangle.cpp
+ * @author Jacques-Olivier Lachaud (\c jacques-olivier.lachaud@univ-savoie.fr )
+ * Laboratory of Mathematics (CNRS, UMR 5127), University of Savoie, France
+ *
+ * @date 2017/02/28
+ *
+ * This file is part of the DGtal library.
+ */
+
+///////////////////////////////////////////////////////////////////////////////
 #include <cmath>
 #include "Triangle.h"
 
 void
-rt::Triangle::draw( Viewer& /* viewer */ )
+DGtal::rt::Triangle::init( RTViewer& viewer )
 {
-  // Taking care of in-between poles
-  glBegin( GL_TRIANGLES );
-  glColor4fv( main_material.ambient );
-  glMaterialfv(GL_FRONT, GL_DIFFUSE, main_material.diffuse);
-  glMaterialfv(GL_FRONT, GL_SPECULAR, main_material.specular);
-  glMaterialf(GL_FRONT, GL_SHININESS, main_material.shinyness );
-  glNormal3fv( N );
-  glVertex3fv( A );
-  glNormal3fv( N );
-  glVertex3fv( B );
-  glNormal3fv( N );
-  glVertex3fv( C );
-  glEnd();
+  viewer.setFillColor( main_material.diffuse ); 
+  viewer.addTriangle( A, B, C );
 }
 
-rt::Vector3
-rt::Triangle::getNormal( Point3 /* p */ )
+void
+DGtal::rt::Triangle::draw( RTViewer& /* viewer */ )
+{
+  // // Taking care of in-between poles
+  // glBegin( GL_TRIANGLES );
+  // glColor4fv( main_material.ambient );
+  // glMaterialfv(GL_FRONT, GL_DIFFUSE, main_material.diffuse);
+  // glMaterialfv(GL_FRONT, GL_SPECULAR, main_material.specular);
+  // glMaterialf(GL_FRONT, GL_SHININESS, main_material.shinyness );
+  // glNormal3fv( GL( N ) );
+  // glVertex3fv( GL( A ) );
+  // glNormal3fv( GL( N ) );
+  // glVertex3fv( GL( B ) );
+  // glNormal3fv( GL( N ) );
+  // glVertex3fv( GL( C ) );
+  // glEnd();
+}
+
+DGtal::rt::Vector3
+DGtal::rt::Triangle::getNormal( Point3 /* p */ )
 {
   return N;
 }
 void
-rt::Triangle::coordinates( Point3 p, Real& x, Real& y )
+DGtal::rt::Triangle::coordinates( Point3 p, Real& x, Real& y )
 {
   // // First project p onto the plane
   Point3 cp = p - A;
@@ -37,8 +67,8 @@ rt::Triangle::coordinates( Point3 p, Real& x, Real& y )
   x = cp.dot( U ) / ( B - A ).dot( U );
   y = cp.dot( V ) / ( C - A ).dot( V );
 }
-rt::Material
-rt::Triangle::getMaterial( Point3 p )
+DGtal::rt::Material
+DGtal::rt::Triangle::getMaterial( Point3 p )
 {
   Real x, y;
   coordinates( p, x, y );
@@ -46,8 +76,8 @@ rt::Triangle::getMaterial( Point3 p )
     ? band_material : main_material;
 }
 
-rt::Real
-rt::Triangle::rayIntersection( const Ray& ray, Point3& p )
+DGtal::rt::Real
+DGtal::rt::Triangle::rayIntersection( const Ray& ray, Point3& p )
 {
   Real cos_a = ray.direction.dot( N );
   Real dist  = N.dot( ray.origin - A );

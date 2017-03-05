@@ -1,163 +1,126 @@
 /**
-@file Background.h
-@author JOL
-*/
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Lesser General Public License as
+ *  published by the Free Software Foundation, either version 3 of the
+ *  License, or  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **/
+
 #pragma once
-#ifndef _BACKGROUND_H_
-#define _BACKGROUND_H_
+
+/**
+ * @file Background.h
+ * @author Jacques-Olivier Lachaud (\c jacques-olivier.lachaud@univ-savoie.fr )
+ * Laboratory of Mathematics (CNRS, UMR 5127), University of Savoie, France
+ *
+ * @date 2017/02/28
+ *
+ * This file is part of the DGtal library.
+ */
+
+#if defined(Background_RECURSES)
+#error Recursive header files inclusion detected in Background.h
+#else // defined(Background_RECURSES)
+/** Prevents recursive inclusion of headers. */
+#define Background_RECURSES
+
+#if !defined Background_h
+/** Prevents repeated inclusion of headers. */
+#define Background_h
 
 #include <cmath>
-#include "Color.h"
-#include "Image2D.h"
-#include "Ray.h"
+#include "raytracer/RealColor.h"
+#include "raytracer/Ray.h"
 
-/// Namespace RayTracer
-namespace rt {
+namespace DGtal {
+  namespace rt {
 
-  struct Background {
-    virtual Color backgroundColor( const Ray& ray ) = 0;
-  };
+    struct Background {
+      virtual RealColor backgroundColor( const Ray& ray ) = 0;
+    };
 
-  struct DuskWithChessboard : public Background
+    struct DuskWithChessboard : public Background
     {
-      Color backgroundColor( const Ray& ray )
+      RealColor backgroundColor( const Ray& ray )
       {
-        Color result( 0.0, 0.0, 0.0 );
-        if ( ray.direction[ 2 ] >= 0.5f )
-          result += Color( 0.0f, 0.0f, 1.5f - ray.direction[ 2 ] );
-        else if ( ray.direction[ 2 ] >= 0.0f )
-          result += Color( 1.0f - 2.0f*ray.direction[ 2 ],
-                           1.0f - 2.0f*ray.direction[ 2 ], 1.0f );
+        RealColor result( 0.0, 0.0, 0.0 );
+        if ( ray.direction[ 2 ] >= 0.5 )
+          result += RealColor( 0.0, 0.0, 1.5 - ray.direction[ 2 ] );
+        else if ( ray.direction[ 2 ] >= 0.0 )
+          result += RealColor( 1.0 - 2.0*ray.direction[ 2 ],
+                           1.0 - 2.0*ray.direction[ 2 ], 1.0 );
         else
           {
-            Real x = -0.5f * ray.direction[ 0 ] / ray.direction[ 2 ];
-            Real y = -0.5f * ray.direction[ 1 ] / ray.direction[ 2 ];
+            Real x = -0.5 * ray.direction[ 0 ] / ray.direction[ 2 ];
+            Real y = -0.5 * ray.direction[ 1 ] / ray.direction[ 2 ];
             Real d = sqrt( x*x + y*y );
-            Real t = std::min( d, 30.0f ) / 30.0f;
+            Real t = std::min( d, 30.0 ) / 30.0;
             x -= floor( x );
             y -= floor( y );
-            if ( ( ( x >= 0.5f ) && ( y >= 0.5f ) )
-                 || ( ( x < 0.5f ) && ( y < 0.5f ) ) )
-              result += (1.0f - t)*Color( 0.2f, 0.2f, 0.2f ) + t * Color( 1.0f, 1.0f, 1.0f );
+            if ( ( ( x >= 0.5 ) && ( y >= 0.5 ) )
+                 || ( ( x < 0.5 ) && ( y < 0.5 ) ) )
+              result += (1.0 - t)*RealColor( 0.2, 0.2, 0.2 ) + t * RealColor( 1.0, 1.0, 1.0 );
             else
-              result += (1.0f - t)*Color( 0.4f, 0.4f, 0.4f ) + t * Color( 1.0f, 1.0f, 1.0f );
+              result += (1.0 - t)*RealColor( 0.4, 0.4, 0.4 ) + t * RealColor( 1.0, 1.0, 1.0 );
           }
         return result;
       }
-  };
+    };
 
-  struct DawnWithChessboard : public Background
+    struct DawnWithChessboard : public Background
     {
-      Color backgroundColor( const Ray& ray )
+      RealColor backgroundColor( const Ray& ray )
       {
-        Color result( 0.0, 0.0, 0.0 );
+        RealColor result( 0.0, 0.0, 0.0 );
         Real z = ray.direction[ 2 ];
         if ( z >= 0.6f )
-          return Color( 0.0f, 0.0f, 0.1f );
-        else if ( z >= 0.4f )
+          return RealColor( 0.0, 0.0, 0.1 );
+        else if ( z >= 0.4 )
           {
-            Real t = (z-0.4f) * 5.0f;
-            result += (1.0f - t) * Color( 0.1f, 0.1f, 0.2f ) + t * Color( 0.0f, 0.0f, 0.1f );
+            Real t = (z-0.4) * 5.0;
+            result += (1.0 - t) * RealColor( 0.1, 0.1, 0.2 ) + t * RealColor( 0.0, 0.0, 0.1 );
           }
-        else if ( z >= 0.2f ) 
+        else if ( z >= 0.2 ) 
           {
-            Real t = (z-0.2f) * 5.0f;
-            result += (1.0f - t) * Color( 0.5f, 0.1f, 0.1f ) + t * Color( 0.1f, 0.1f, 0.2f );
+            Real t = (z-0.2) * 5.0;
+            result += (1.0 - t) * RealColor( 0.5, 0.1, 0.1 ) + t * RealColor( 0.1, 0.1, 0.2 );
           }
-        else if ( z >= 0.0f ) 
+        else if ( z >= 0.0 ) 
           {
-            Real t = z * 5.0f;
-            result += (1.0f - t) * Color( 1.0f, 1.0f, 0.3f ) + t * Color( 0.5f, 0.1f, 0.1f );
-          }
-        else
-          {
-            Real x = -0.5f * ray.direction[ 0 ] / ray.direction[ 2 ];
-            Real y = -0.5f * ray.direction[ 1 ] / ray.direction[ 2 ];
-            Real d = sqrt( x*x + y*y );
-            Real t = std::min( d, 30.0f ) / 30.0f;
-            x -= floor( x );
-            y -= floor( y );
-            if ( ( ( x >= 0.5f ) && ( y >= 0.5f ) )
-                 || ( ( x < 0.5f ) && ( y < 0.5f ) ) )
-              result += (1.0f - t)*Color( 0.2f, 0.2f, 0.2f ) + t * Color( 1.0f, 1.0f, 0.3f );
-            else
-              result += (1.0f - t)*Color( 0.4f, 0.4f, 0.4f ) + t * Color( 1.0f, 1.0f, 0.3f );
-          }
-        return result;
-      }
-  };
-
-  struct ImageSkyBackground : public Background
-    {
-      Image2D<Color> sky;
-      Real radius;
-      Real xc, yc;
-
-      ImageSkyBackground() {}
-      ImageSkyBackground( const Image2D<Color>& skyimage )
-      {
-        setSkyImage( skyimage );
-      }
-
-      Color getColor( Real x, Real y ) const
-      {
-        int i  = (int) floor( x );
-        int j  = (int) floor( y );
-        Real s = x - (Real) i;
-        Real t = y - (Real) j;
-        Color c = (1.0f - s) * (1.0f - t) * sky.at( i,   j )
-          +            s     * (1.0f - t) * sky.at( i+1, j )
-          +            s     *      t     * sky.at( i+1, j+1 )
-          +       (1.0f - s) *      t     * sky.at( i,   j+1 );
-        return c;
-      }
-      void setSkyImage( const Image2D<Color>& image )
-      {
-        sky = image;
-        int size = std::min( image.w(), image.h() );
-        radius = ((Real) size - 30.0f)/2.0;
-        xc = ( (Real) image.w() ) / 2.0f;
-        yc = ( (Real) image.h() ) / 2.0f;
-      }
-
-      Color fisheye( Vector3 dir )
-      {
-        Real t = atan2( dir[ 1 ], dir[ 0 ] );
-        Real a = sqrt( dir[ 0 ] * dir[ 0 ] + dir[ 1 ] * dir[ 1 ] );
-        Real ta= std::max( 0.0f, 1.0f - (Real)sqrt( std::max( 0.0f, 1.0f - a*a ) ) );
-        Real x = ta * cos(t) * radius + xc;
-        Real y = ta * sin(t) * radius + yc;
-        return getColor( x, y );
-      }
-      
-      Color backgroundColor( const Ray& ray )
-      {
-        Color result( 0.0, 0.0, 0.0 );
-        if ( ray.direction[ 2 ] >= 0.05f )
-          return fisheye( ray.direction );
-        else if ( ray.direction[ 2 ] >= 0.0f )
-          {
-            Real t = ( 0.05f - ray.direction[ 2 ] ) / 0.05f;
-            return (1.0f-t) * fisheye( ray.direction ) + t * Color(0.5f,0.5f,0.5f);
+            Real t = z * 5.0;
+            result += (1.0 - t) * RealColor( 1.0, 1.0, 0.3 ) + t * RealColor( 0.5, 0.1, 0.1 );
           }
         else
           {
-            Real x = -0.5f * ray.direction[ 0 ] / ray.direction[ 2 ];
-            Real y = -0.5f * ray.direction[ 1 ] / ray.direction[ 2 ];
+            Real x = -0.5 * ray.direction[ 0 ] / ray.direction[ 2 ];
+            Real y = -0.5 * ray.direction[ 1 ] / ray.direction[ 2 ];
             Real d = sqrt( x*x + y*y );
-            Real t = std::min( d, 30.0f ) / 30.0f;
+            Real t = std::min( d, 30.0 ) / 30.0;
             x -= floor( x );
             y -= floor( y );
-            if ( ( ( x >= 0.5f ) && ( y >= 0.5f ) )
-                 || ( ( x < 0.5f ) && ( y < 0.5f ) ) )
-              result += (1.0f - t)*Color( 0.2f, 0.2f, 0.2f ) + t * Color( 1.0f, 1.0f, 1.0f );
+            if ( ( ( x >= 0.5 ) && ( y >= 0.5 ) )
+                 || ( ( x < 0.5 ) && ( y < 0.5 ) ) )
+              result += (1.0 - t)*RealColor( 0.2, 0.2, 0.2 ) + t * RealColor( 1.0, 1.0, 0.3 );
             else
-              result += (1.0f - t)*Color( 0.4f, 0.4f, 0.4f ) + t * Color( 1.0f, 1.0f, 1.0f );
+              result += (1.0 - t)*RealColor( 0.4, 0.4, 0.4 ) + t * RealColor( 1.0, 1.0, 0.3 );
           }
         return result;
       }
-  };
+    };
+    
+  } // namespace rt
+} // namespace DGtal
 
-  
-} // namespace rt
-#endif // define _BACKGROUND_H_
+#endif // !defined Background_ha
+
+#undef Background_RECURSES
+#endif // else defined(Background_RECURSES)
+

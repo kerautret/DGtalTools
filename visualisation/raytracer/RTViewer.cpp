@@ -1,33 +1,56 @@
 /**
-@file Viewer.cpp
-@author JOL
-*/
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Lesser General Public License as
+ *  published by the Free Software Foundation, either version 3 of the
+ *  License, or  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **/
+/**
+ * @file RTViewer.cpp
+ * @author Jacques-Olivier Lachaud (\c jacques-olivier.lachaud@univ-savoie.fr )
+ * Laboratory of Mathematics (CNRS, UMR 5127), University of Savoie, France
+ *
+ * @date 2017/02/28
+ *
+ * This file is part of the DGtal library.
+ */
+
+///////////////////////////////////////////////////////////////////////////////
+
+
 #include <fstream>
-#include "Viewer.h"
-#include "Scene.h"
-#include "Renderer.h"
-#include "Image2D.h"
-#include "Image2DWriter.h"
-#include "Image2DReader.h"
-#include "Background.h"
+#include "raytracer/RTViewer.h"
+#include "raytracer/Scene.h"
+#include "raytracer/Renderer.h"
+#include "raytracer/Background.h"
+#include "DGtal/images/ImageContainerBySTLVector.h"
+#include "DGtal/io/writers/PPMWriter.h"
 
 using namespace std;
 
 // Draws a tetrahedron with 4 colors.
-void 
-rt::Viewer::draw()
-{
-  // Set up lights
-  if ( ptrScene != 0 )
-    ptrScene->light( *this );
-  // Draw all objects
-  if ( ptrScene != 0 )
-    ptrScene->draw( *this );
-}
+// void 
+// DGtal::rt::RTViewer::draw()
+// {
+//   // Set up lights
+//   if ( ptrScene != 0 )
+//     ptrScene->light( *this );
+//   // Draw all objects
+//   if ( ptrScene != 0 )
+//     ptrScene->draw( *this );
+// }
 
 
 void 
-rt::Viewer::init()
+DGtal::rt::RTViewer::init()
 {
   // Restore previous viewer state.
   restoreStateFromFile();
@@ -40,23 +63,25 @@ rt::Viewer::init()
   setKeyDescription(Qt::SHIFT+Qt::Key_D, "Decreases the max depth of ray-tracing algorithm");
   
   // Opens help window
-  help();
+  // help();
 
   // To move lights around
-  setMouseTracking(true);
+  // setMouseTracking(true);
 
-  // Inits the scene
-  if ( ptrScene != 0 )
-    ptrScene->init( *this );
-  
   // Gives a bounding box to the camera
   camera()->setSceneBoundingBox( qglviewer::Vec( -7, -7, -2 ),qglviewer::Vec( 7, 7, 12 ) );
+
+  Base::init();
 
 }
 
 void
-rt::Viewer::keyPressEvent(QKeyEvent *e)
+DGtal::rt::RTViewer::keyPressEvent(QKeyEvent *e)
 {
+  // The type for representing a 2d rectangular domain.
+  typedef DGtal::HyperRectDomain<Space2> Domain2D;
+  // The type chosen for representing color images.
+  typedef DGtal::ImageContainerBySTLVector<Domain2D,RealColor> Image2D;
   // Get event modifiers key
   const Qt::KeyboardModifiers modifiers = e->modifiers();
   bool handled = false;
@@ -78,23 +103,14 @@ rt::Viewer::keyPressEvent(QKeyEvent *e)
       renderer.setViewBox( origin, dirUL, dirUR, dirLL, dirLR );
       if ( modifiers == Qt::ShiftModifier ) { w /= 2; h /= 2; }
       else if ( modifiers == Qt::NoModifier ) { w /= 8; h /= 8; }
-      Image2D<Color> sky;
-      ifstream input( "fisheye-sky-2.ppm" );
-      bool ok = Image2DReader<Color>::read( sky, input );
       DuskWithChessboard bg;
-      ImageSkyBackground bgsky;
-      if ( ok )
-        {
-          bgsky.setSkyImage( sky );
-          renderer.setBackground( &bgsky );
-        }
-      else renderer.setBackground( &bg ); 
-      Image2D<Color> image( w, h );
-      renderer.setResolution( image.w(), image.h() );
+      renderer.setBackground( &bg ); 
+      Domain2D domain( Point2i( 0, 0 ) , Point2i( w, h ) );
+      Image2D  image ( domain );
+      renderer.setResolution( w, h );
       renderer.render( image, maxDepth );
-      ofstream output( "output.ppm" );
-      Image2DWriter<Color>::write( image, output, true );
-      output.close();
+      PPMWriter<Image2D,RealColor2Color>::exportPPM( "output.ppm", image,
+                                                     RealColor2Color(), false );
       handled = true;
     }
   if (e->key()==Qt::Key_D)
@@ -110,7 +126,7 @@ rt::Viewer::keyPressEvent(QKeyEvent *e)
 }
 
 QString 
-rt::Viewer::helpString() const
+DGtal::rt::RTViewer::helpString() const
 {
   QString text("<h2>S i m p l e V i e w e r</h2>");
   text += "Use the mouse to move the camera around the object. ";

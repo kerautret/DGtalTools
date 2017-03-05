@@ -43,6 +43,12 @@ if (  WITH_VISU3D_QGLVIEWER )
                                 LIBRARY DESTINATION lib
                                 ARCHIVE DESTINATION lib)
 
+  add_executable(3dVolRayTracer 3dVolRayTracer raytracer/RayTracerViewerExtension raytracer/Sphere raytracer/Triangle raytracer/WaterPlane raytracer/PeriodicPlane )
+  target_link_libraries(3dVolRayTracer ${DGTAL_LIBRARIES} ${DGtalToolsLibDependencies})
+  install(TARGETS 3dVolRayTracer RUNTIME DESTINATION bin
+                                LIBRARY DESTINATION lib
+                                ARCHIVE DESTINATION lib)
+
   include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
   if (WITH_QT4)

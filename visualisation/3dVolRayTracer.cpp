@@ -33,7 +33,7 @@
 #include <sstream>
 #include <string>
 
-#include "raytracer/Viewer.h"
+#include "raytracer/RayTracerViewerExtension.h"
 #include "raytracer/Scene.h"
 #include "raytracer/Sphere.h"
 #include "raytracer/Material.h"
@@ -44,6 +44,7 @@
 
 using namespace std;
 using namespace DGtal;
+using namespace DGtal::rt;
 
 void addBubble( Scene& scene, Point3 c, Real r, Material transp_m )
 {
@@ -144,46 +145,54 @@ int main(int argc, char** argv)
   Scene scene;
   
   // Light at infinity
-  Light* light0 = new PointLight( GL_LIGHT0, Point4( 0,0,1,0 ),
-                                      Color( 1.0, 1.0, 1.0 ) );
-  // Light* light1 = new PointLight( GL_LIGHT1, Point4( -1,-1,11,1 ),
-  //                                 Color( 1.0, 1.0, 1.0 ) );
+  Light* light0   = new PointLight( GL_LIGHT0, Vector4( 0, 0, 1, 0),
+                                    RealColor( 1.0, 1.0, 1.0 ) );
+  Light* light1   = new PointLight( GL_LIGHT1, Vector4( -10,-10,11,1),
+                                    RealColor( 1.0, 1.0, 1.0 ) );
   scene.addLight( light0 );
-  // scene.addLight( light1 );
+  scene.addLight( light1 );
 
-  shallowSand( scene, 1.0f );
-  // groundWhiteAndBlack( scene, 0.0f );
+  // shallowSand( scene, 1.0f );
+  groundWhiteAndBlack( scene, 0.0f );
   // groundBlackAndGrey( scene, Point3( 0, 0, 0 ) );
   // leftBuilding( scene, 10.0 );
-  water( scene, Point3( 0, 0, 0 ) );
+  // water( scene, Point3( 0, 0, 0 ) );
 
   // Objects
   // Sphere* sphere1 = new Sphere( Point3( 0, 0, 3), 3.0, Material::mirror() );
   Sphere* sphere1 = new Sphere( Point3( 0, 0, 0), 2.0, Material::bronze() );
-  // Sphere* sphere2 = new Sphere( Point3( 0, 4, 0.5), 1.0, Material::emerald() );
-  // Sphere* sphere3 = new Sphere( Point3( 6, 6, 0), 3.0, Material::whitePlastic() );
-  // Sphere* sphere4 = new Sphere( Point3( 5, 0, 0), 3.0, Material::bronze() );
+  Sphere* sphere2 = new Sphere( Point3( 0, 4, 0.5), 1.0, Material::emerald() );
+  Sphere* sphere3 = new Sphere( Point3( 6, 6, 0), 3.0, Material::whitePlastic() );
+  Sphere* sphere4 = new Sphere( Point3( 5, 0, 0), 3.0, Material::bronze() );
   scene.addObject( sphere1 );
-  // scene.addObject( sphere2 );
-  // scene.addObject( sphere3 );
-  // scene.addObject( sphere4 );
-  // pyramid( scene, Point3( -5, -5, -1 ), 6.0f, Material::ruby(), Material::blackMatter(), 0.025f );
-  // pyramid( scene, Point3( -5, -5, -1 ), 5.0f, Material::mirror(), Material::mirror(), 0.00f );
-  // pyramid( scene, Point3( 30, 40, -3 ), 25.0f, Material::emerald(), Material::blackMatter(), 0.025f );
+  scene.addObject( sphere2 );
+  scene.addObject( sphere3 );
+  scene.addObject( sphere4 );
+  pyramid( scene, Point3( -5, -5, -1 ), 6.0f, Material::ruby(), Material::blackMatter(), 0.025f );
+  pyramid( scene, Point3( -5, -5, -1 ), 5.0f, Material::mirror(), Material::mirror(), 0.00f );
+  // pyramid( scene, Point3( 30, 40, -3 ), 25.0f, Material::blueWater(), Material::blackMatter(), 0.025f );
   // pyramid( scene, Point3( 30, 40, -3 ), 23.0f, Material::mirror(), Material::mirror(), 0.00f );
 
-  // addBubble( scene, Point3( -3, 4, 8 ), 4.0, Material::mirror() );
+  addBubble( scene, Point3( -3, 4, 8 ), 4.0, Material::mirror() );
 
   // Instantiate the viewer.
-  Viewer viewer;
+  typedef Viewer3D<Space3,KSpace3> Viewer;
+  KSpace3 K;
+  K.init( Point3::diagonal( -100 ),Point3::diagonal( 100 ), true );
+  Viewer viewer( K );
+  viewer.setExtension( new RayTracerViewerExtension( scene ) );
   // Give a name
   viewer.setWindowTitle("Ray-tracer preview");
 
-  // Sets the scene
-  viewer.setScene( scene );
-
   // Make the viewer window visible on screen.
   viewer.show();
+
+  // Must be done after viewer.show() !
+  scene.init( viewer );
+
+  // Forces update
+  viewer << Viewer::updateDisplay;
+
   // Run main loop.
   application.exec();
   return 0;

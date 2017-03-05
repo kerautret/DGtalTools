@@ -17,7 +17,7 @@
 #pragma once
 
 /**
- * @file RTViewer.h
+ * @file RayTracerViewerExtension.h
  * @author Jacques-Olivier Lachaud (\c jacques-olivier.lachaud@univ-savoie.fr )
  * Laboratory of Mathematics (CNRS, UMR 5127), University of Savoie, France
  *
@@ -26,20 +26,19 @@
  * This file is part of the DGtal library.
  */
 
-#if defined(RTViewer_RECURSES)
-#error Recursive header files inclusion detected in RTViewer.h
-#else // defined(RTViewer_RECURSES)
+#if defined(RayTracerViewerExtension_RECURSES)
+#error Recursive header files inclusion detected in RayTracerViewerExtension.h
+#else // defined(RayTracerViewerExtension_RECURSES)
 /** Prevents recursive inclusion of headers. */
-#define RTViewer_RECURSES
+#define RayTracerViewerExtension_RECURSES
 
-#if !defined RTViewer_h
+#if !defined RayTracerViewerExtension_h
 /** Prevents repeated inclusion of headers. */
-#define RTViewer_h
+#define RayTracerViewerExtension_h
 
 #include <vector>
 #include <QKeyEvent>
 //#include <QGLViewer/qglviewer.h>
-#include "raytracer/Ray.h"
 #include "raytracer/RealColor.h"
 #include "DGtal/io/Color.h"
 #include "DGtal/io/viewers/Viewer3D.h"
@@ -50,12 +49,17 @@ namespace DGtal {
     /// Forward declaration of class Scene
     struct Scene;
 
+    /// The viewer used for the ray tracer.
+    typedef DGtal::Viewer3D<Space3,KSpace3> RTViewer;
+
     /// This class displays the interface for placing the camera and the
     /// lights, and the user may call the renderer from it.
-    class RTViewer : public DGtal::Viewer3D<Space3,KSpace3>
+    class RayTracerViewerExtension
+      : public DGtal::Viewer3D<Space3,KSpace3>::Extension
     {
     public:
-      typedef DGtal::Viewer3D<Space3,KSpace3> Base;
+      typedef DGtal::Viewer3D<Space3,KSpace3>            Viewer;
+      typedef DGtal::Viewer3D<Space3,KSpace3>::Extension Base;
       
       struct RealColor2Color {
         inline Color operator()( const RealColor& rc ) const
@@ -66,10 +70,16 @@ namespace DGtal {
         }
                        
       };
+
     public:
       /// Default constructor. Scene is empty.
-      RTViewer( const KSpace3& K ) : Base( K ), ptrScene( 0 ), maxDepth( 6 ) {}
-    
+      RayTracerViewerExtension() : ptrScene( 0 ), maxDepth( 6 ) {}
+
+      /// Constructor with scene and depth.
+      RayTracerViewerExtension( DGtal::rt::Scene& aScene,
+                                int depth = 6 )
+        : ptrScene( &aScene ), maxDepth( depth ) {}
+      
       /// Sets the scene
       void setScene( DGtal::rt::Scene& aScene )
       {
@@ -79,26 +89,28 @@ namespace DGtal {
         //   ptrScene->init( *this );
       }
     
-      /// To call the protected method `drawLight`.
-      void drawSomeLight( GLenum light ) const
-      {
-        drawLight( light );
-      }
-      /// To call the protected method `drawLight`.
-      void drawSomeLight( GLenum light, float zoom ) const
-      {
-        drawLight( light, zoom );
-      }
+      // /// To call the protected method `drawLight`.
+      // void drawSomeLight( GLenum light ) const
+      // {
+      //   viewer.drawLight( light );
+      // }
+      // /// To call the protected method `drawLight`.
+      // void drawSomeLight( GLenum light, float zoom ) const
+      // {
+      //   viewer.drawLight( light, zoom );
+      // }
 
-    protected :
-      // /// Called at each draw of the window
-      virtual void draw(){}
+      /// Called at each draw of the window
+      virtual void draw( Viewer& viewer );
+
       /// Called before the first draw
-      virtual void init();
+      virtual void init( Viewer& viewer );
+
       /// Called when pressing help.
-      virtual QString helpString() const;
+      virtual QString helpString( const Viewer& viewer ) const;
+
       /// Celled when pressing a key.
-      virtual void keyPressEvent(QKeyEvent *e);
+      virtual bool keyPressEvent( Viewer& viewer, QKeyEvent *e);
     
       /// Stores the scene
       DGtal::rt::Scene* ptrScene;
@@ -108,8 +120,8 @@ namespace DGtal {
     };
   }
 }
-#endif // !defined RTViewer_h
+#endif // !defined RayTracerViewerExtension_h
 
-#undef RTViewer_RECURSES
-#endif // else defined(RTViewer_RECURSES)
+#undef RayTracerViewerExtension_RECURSES
+#endif // else defined(RayTracerViewerExtension_RECURSES)
 
