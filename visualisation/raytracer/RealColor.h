@@ -47,7 +47,7 @@ namespace DGtal {
     struct RealColor {
     private:
       Vector3 my_channels;
-      mutable float gl_conv[ 3 ];
+      mutable float gl_conv[ 4 ];
       
     public:
       RealColor() : my_channels( 0.0, 0.0, 0.0 ) {}
@@ -70,6 +70,7 @@ namespace DGtal {
         gl_conv[ 0 ] = (float) my_channels[ 0 ];
         gl_conv[ 1 ] = (float) my_channels[ 1 ];
         gl_conv[ 2 ] = (float) my_channels[ 2 ];
+        gl_conv[ 3 ] = 1.0f;
         return gl_conv;
       }
       // Useful for conversion to OpenGL vectors
@@ -78,6 +79,7 @@ namespace DGtal {
         gl_conv[ 0 ] = (float) my_channels[ 0 ];
         gl_conv[ 1 ] = (float) my_channels[ 1 ];
         gl_conv[ 2 ] = (float) my_channels[ 2 ];
+        gl_conv[ 3 ] = 1.0f;
         return gl_conv;
       }
       operator Color() const

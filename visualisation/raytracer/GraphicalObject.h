@@ -36,7 +36,7 @@
 /** Prevents repeated inclusion of headers. */
 #define GraphicalObject_h
 
-#include "raytracer/Ray.h"
+#include "raytracer/GeometricalObject.h"
 #include "raytracer/RayTracerViewerExtension.h"
 #include "raytracer/Material.h"
 
@@ -48,9 +48,10 @@ namespace DGtal {
     /// graphical object should have. It is also drawable to be seen in
     /// QGLViewer window.  Concrete exemples of a GraphicalObject
     /// include Spheres.
-    struct GraphicalObject {
+    struct GraphicalObject : public GeometricalObject {
       /// Temporary float array holder.
       GLfloat tmp[ 4 ];
+
       /// Default constructor. Nothing to do.
       GraphicalObject() {}
 
@@ -86,20 +87,8 @@ namespace DGtal {
       /// redisplay objects in the OpenGL window.
       virtual void draw( RTViewer& /* viewer */ ) = 0;
 
-      /// @return the normal vector at point \a p on the object (\a p
-      /// should be on or close to the sphere).
-      virtual Vector3 getNormal( Point3 p ) = 0;
-
       /// @return the material associated to this part of the object
       virtual Material getMaterial( Point3 p ) = 0;
-
-      /// @param[in] ray the incoming ray
-      /// @param[out] returns the point of intersection with the object
-      /// (if any), or the closest point to it.
-      ///
-      /// @return either a real < 0.0 if there is an intersection, or a
-      /// kind of distance to the closest point of intersection.
-      virtual Real rayIntersection( const Ray& ray, Point3& p ) = 0;
                     
     };
 

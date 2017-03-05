@@ -98,7 +98,14 @@ namespace DGtal {
           coef_diffusion( cdiff ), coef_reflexion( crefl ), coef_refraction( crefr ),
           in_refractive_index( in_ridx ), out_refractive_index( out_ridx )
       {}
-    
+
+      Material revert() const
+      {
+        Material m = *this;
+        std::swap( m.in_refractive_index, m.out_refractive_index );
+        return m;
+      }
+      
       static Material whitePlastic() 
       {
         Material m;

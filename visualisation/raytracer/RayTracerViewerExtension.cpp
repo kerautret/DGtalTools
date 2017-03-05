@@ -39,12 +39,12 @@ using namespace std;
 void 
 DGtal::rt::RayTracerViewerExtension::draw( Viewer& viewer ) 
 {
-  // // Set up lights
-  // if ( ptrScene != 0 )
-  //   ptrScene->light( *this );
-  // // Draw all objects
-  // if ( ptrScene != 0 )
-  //   ptrScene->draw( *this );
+  // Set up lights
+  if ( ptrScene != 0 )
+    ptrScene->light( viewer );
+  // Draw all objects
+  if ( ptrScene != 0 )
+    ptrScene->draw( viewer );
 }
 
 

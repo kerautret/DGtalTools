@@ -145,11 +145,11 @@ int main(int argc, char** argv)
   Scene scene;
   
   // Light at infinity
-  Light* light0   = new PointLight( GL_LIGHT0, Vector4( 0, 0, 1, 0),
-                                    RealColor( 1.0, 1.0, 1.0 ) );
+  // Light* light0   = new PointLight( GL_LIGHT0, Vector4( 0, 0, 1, 0),
+  //                                   RealColor( 1.0, 1.0, 1.0 ) );
   Light* light1   = new PointLight( GL_LIGHT1, Vector4( -10,-10,11,1),
                                     RealColor( 1.0, 1.0, 1.0 ) );
-  scene.addLight( light0 );
+  // scene.addLight( light0 );
   scene.addLight( light1 );
 
   // shallowSand( scene, 1.0f );
@@ -170,8 +170,8 @@ int main(int argc, char** argv)
   scene.addObject( sphere4 );
   pyramid( scene, Point3( -5, -5, -1 ), 6.0f, Material::ruby(), Material::blackMatter(), 0.025f );
   pyramid( scene, Point3( -5, -5, -1 ), 5.0f, Material::mirror(), Material::mirror(), 0.00f );
-  // pyramid( scene, Point3( 30, 40, -3 ), 25.0f, Material::blueWater(), Material::blackMatter(), 0.025f );
-  // pyramid( scene, Point3( 30, 40, -3 ), 23.0f, Material::mirror(), Material::mirror(), 0.00f );
+  pyramid( scene, Point3( 0, 0, -3 ), 25.0f, Material::glass(), Material::blackMatter(), 0.025f );
+  pyramid( scene, Point3( 0, 0, -3 ), 24.5f, Material::glass().revert(), Material::mirror(), 0.00f );
 
   addBubble( scene, Point3( -3, 4, 8 ), 4.0, Material::mirror() );
 
