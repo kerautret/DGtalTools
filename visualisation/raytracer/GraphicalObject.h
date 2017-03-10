@@ -48,7 +48,7 @@ namespace DGtal {
     /// graphical object should have. It is also drawable to be seen in
     /// QGLViewer window.  Concrete exemples of a GraphicalObject
     /// include Spheres.
-    struct GraphicalObject : public GeometricalObject {
+    struct GraphicalObject : public virtual GeometricalObject {
       /// Temporary float array holder.
       GLfloat tmp[ 4 ];
 

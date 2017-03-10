@@ -17,7 +17,7 @@
 #pragma once
 
 /**
- * @file PeriodicPlane.h
+ * @file Parallelogram.h
  * @author Jacques-Olivier Lachaud (\c jacques-olivier.lachaud@univ-savoie.fr )
  * Laboratory of Mathematics (CNRS, UMR 5127), University of Savoie, France
  *
@@ -26,46 +26,56 @@
  * This file is part of the DGtal library.
  */
 
-#if defined(PeriodicPlane_RECURSES)
-#error Recursive header files inclusion detected in PeriodicPlane.h
-#else // defined(PeriodicPlane_RECURSES)
+#if defined(Parallelogram_RECURSES)
+#error Recursive header files inclusion detected in Parallelogram.h
+#else // defined(Parallelogram_RECURSES)
 /** Prevents recursive inclusion of headers. */
-#define PeriodicPlane_RECURSES
+#define Parallelogram_RECURSES
 
-#if !defined PeriodicPlane_h
+#if !defined Parallelogram_h
 /** Prevents repeated inclusion of headers. */
-#define PeriodicPlane_h
+#define Parallelogram_h
 
-// In order to call opengl commands in all graphical objects
 #include "raytracer/GeometricalObject.h"
 
 namespace DGtal {
   namespace rt {
 
-    /// This is an interface specifying methods that any graphical
-    /// object should have. It is also drawable to be seen in QGLViewer
-    /// window.
-    /// Concrete exemples of a GraphicalObject include spheres.
-    struct PeriodicPlane : public virtual GeometricalObject {
-      /// The point at coordinate (0,0) on this plane.
-      Point3 center;
-      /// The x-vector on this plane (may not be unitary)
-      Vector3 e0;
-      /// The y-vector on this plane (may not be unitary)
-      Vector3 e1;
+    /// A triangle is a model of GraphicalObject.
+    struct Parallelogram : public virtual GeometricalObject {
+      /// The first vertex of the parallelogram (coordinates (0,0)).
+      Point3 A;
+      /// The second vertex of the parallelogram (coordinates (1,0)).
+      Point3 B;
+      /// The third vertex of the parallelogram (coordinates (0,1)).
+      Point3 C;
+      /// The fourth vertex of the parallelogram (coordinates (1,1)).
+      Point3 D;
       /// The unit normal vector to this plane (orthogonal to e0 and e1
       /// and [e0, e1, n] is a direct basis).
-      Vector3 n;
+      Vector3 N;
+      /// A vector orthogonal to AC and N.
+      Vector3 U;
+      /// A vector orthogonal to AB and N.
+      Vector3 V;
     
-      /// Creates a periodic infinite plane passing through \a c and
-      /// tangent to \a u and \a v. Then \a w defines the width of the
-      /// band around (0,0) and its period to put material \a band_m,
-      /// otherwise \a main_m is used.
-      PeriodicPlane( Point3 c, Vector3 u, Vector3 v );
+      /// Creates a parallelogram of vertices \a a, \a b and \a c, and
+      /// last vertex is computed as \f$ a + b-a + c-a \f$.
+      inline
+      Parallelogram( Point3 a, Point3 b, Point3 c )
+        : A( a ), B( b ), C( c ), D( b+c-a )
+      {
+        Vector3 AB = B - A;
+        Vector3 AC = C - A;
+        N = AB.crossProduct( AC );
+        N /= N.norm();
+        U = AC.crossProduct( N );
+        V = N.crossProduct( AB );
+      }
     
       /// Virtual destructor since object contains virtual methods.
-      virtual ~PeriodicPlane();
-      
+      ~Parallelogram() {}
+
       void coordinates( Point3 p, Real& x, Real& y );
 
       /// @return the normal vector at point \a p on the object (\a p
@@ -85,8 +95,7 @@ namespace DGtal {
   } // namespace rt
 } // namespace DGtal
 
-#endif // !defined PeriodicPlane_ha
+#endif // !defined Parallelogram_h
 
-#undef PeriodicPlane_RECURSES
-#endif // else defined(PeriodicPlane_RECURSES)
-
+#undef Parallelogram_RECURSES
+#endif // else defined(Parallelogram_RECURSES)

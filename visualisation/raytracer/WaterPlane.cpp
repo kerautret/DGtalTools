@@ -29,29 +29,29 @@
 void
 DGtal::rt::WaterPlane::draw( RTViewer& /* viewer */ )
 {
-  // // Taking care of in-between poles
-  // glBegin( GL_QUAD_STRIP);
-  // glColor4fv( water.ambient );
-  // glMaterialfv(GL_FRONT, GL_DIFFUSE, water.diffuse);
-  // glMaterialfv(GL_FRONT, GL_SPECULAR, water.specular);
-  // glMaterialf(GL_FRONT, GL_SHININESS, water.shinyness );
-  // const Real factor = 20.0;
-  // Vector3 e0( 1, 0, 0 );
-  // Vector3 e1( 0, 1, 0 );
-  // Vector3 n ( 0, 0, 1 );
-  // Point3 p00 = center - factor*e0 - factor*e1;
-  // Point3 p01 = center + factor*e0 - factor*e1;
-  // Point3 p10 = center - factor*e0 + factor*e1;
-  // Point3 p11 = center + factor*e0 + factor*e1;
-  // glNormal3fv( GL( n ) );
-  // glVertex3fv( GL( p00 ) );
-  // glNormal3fv( GL( n ) );
-  // glVertex3fv( GL( p01 ) );
-  // glNormal3fv( GL( n ) );
-  // glVertex3fv( GL( p10 ) );
-  // glNormal3fv( GL( n ) );
-  // glVertex3fv( GL( p11 ) );
-  // glEnd();
+  // Taking care of in-between poles
+  glBegin( GL_QUAD_STRIP);
+  glColor4fv( water.ambient );
+  glMaterialfv(GL_FRONT, GL_DIFFUSE, water.diffuse);
+  glMaterialfv(GL_FRONT, GL_SPECULAR, water.specular);
+  glMaterialf(GL_FRONT, GL_SHININESS, water.shinyness );
+  const Real factor = 50.0;
+  Vector3 e0( 1, 0, 0 );
+  Vector3 e1( 0, 1, 0 );
+  Vector3 n ( 0, 0, 1 );
+  Point3 p00 = center - factor*e0 - factor*e1;
+  Point3 p01 = center + factor*e0 - factor*e1;
+  Point3 p10 = center - factor*e0 + factor*e1;
+  Point3 p11 = center + factor*e0 + factor*e1;
+  glNormal3fv( GL( n ) );
+  glVertex3fv( GL( p00 ) );
+  glNormal3fv( GL( n ) );
+  glVertex3fv( GL( p01 ) );
+  glNormal3fv( GL( n ) );
+  glVertex3fv( GL( p10 ) );
+  glNormal3fv( GL( n ) );
+  glVertex3fv( GL( p11 ) );
+  glEnd();
 }
 
 DGtal::rt::Vector3

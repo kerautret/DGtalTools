@@ -28,49 +28,23 @@
 #include "raytracer/PeriodicPlane.h"
 
 
-DGtal::rt::PeriodicPlane::PeriodicPlane( Point3 c, Vector3 u, Vector3 v,
-                                         Material main_m, Material band_m, Real w)
-  : center( c ), e0( u ), e1( v ),
-    main_material( main_m ), band_material( band_m ), width( w )
+DGtal::rt::PeriodicPlane::PeriodicPlane
+( Point3 c, Vector3 u, Vector3 v )
+  : center( c ), e0( u ), e1( v )
 {
   n = u.crossProduct( v );
   n /= n.norm();
-  faraway = Material::mix( w, main_m, band_m );
 }
     
 DGtal::rt::PeriodicPlane::~PeriodicPlane()
 {}
-
-void
-DGtal::rt::PeriodicPlane::draw( RTViewer& /* viewer */ )
-{
-  // // Taking care of in-between poles
-  // glBegin( GL_QUAD_STRIP);
-  // glColor4fv( main_material.ambient );
-  // glMaterialfv(GL_FRONT, GL_DIFFUSE, main_material.diffuse);
-  // glMaterialfv(GL_FRONT, GL_SPECULAR, main_material.specular);
-  // glMaterialf(GL_FRONT, GL_SHININESS, main_material.shinyness );
-  // const Real factor = 20.0;
-  // Point3 p00 = center - factor*e0 - factor*e1;
-  // Point3 p01 = center + factor*e0 - factor*e1;
-  // Point3 p10 = center - factor*e0 + factor*e1;
-  // Point3 p11 = center + factor*e0 + factor*e1;
-  // glNormal3fv( GL( n ) );
-  // glVertex3fv( GL( p00 ) );
-  // glNormal3fv( GL( n ) );
-  // glVertex3fv( GL( p01 ) );
-  // glNormal3fv( GL( n ) );
-  // glVertex3fv( GL( p10 ) );
-  // glNormal3fv( GL( n ) );
-  // glVertex3fv( GL( p11 ) );
-  // glEnd();
-}
 
 DGtal::rt::Vector3
 DGtal::rt::PeriodicPlane::getNormal( Point3 /* p */ )
 {
   return n;
 }
+
 void
 DGtal::rt::PeriodicPlane::coordinates( Point3 p, Real& x, Real& y )
 {
@@ -80,21 +54,6 @@ DGtal::rt::PeriodicPlane::coordinates( Point3 p, Real& x, Real& y )
   // Then computes its local coordinates
   x = pp.dot( e0 ) / e0.dot( e0 );
   y = pp.dot( e1 ) / e1.dot( e1 );
-}
-DGtal::rt::Material
-DGtal::rt::PeriodicPlane::getMaterial( Point3 p )
-{
-  Real x, y;
-  coordinates( p, x, y );
-  Real d2 = pow( x*x + y*y, 0.3 );
-  Real att = std::max( 20.0 - d2, 0.0 ) / 20.0;
-
-  x -= floor( x );
-  y -= floor( y );
-
-  return ( ( x < width ) || ( y < width ) )
-    ? Material::mix( att, faraway, band_material ) 
-    : Material::mix( att, faraway, main_material );
 }
 
 DGtal::rt::Real

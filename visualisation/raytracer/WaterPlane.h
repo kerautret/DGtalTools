@@ -87,7 +87,8 @@ namespace DGtal {
         }
       };
 
-      /// The "shape" of the water is given by a sum of oriented sinusoidal functions in the plane.
+      /// The "shape" of the water is given by a sum of oriented
+      /// sinusoidal functions in the plane.
       std::vector<Sinusoide> shape;
     
       /// Creates a periodic water plane passing through \a c and
@@ -109,15 +110,16 @@ namespace DGtal {
       }
     
       /// Virtual destructor since object contains virtual methods.
-      ~WaterPlane() {}
+      virtual ~WaterPlane() {}
 
-      /// Given a point on the plane, returns its two coordinates in a plane parametrization.
+      /// Given a point on the plane, returns its two coordinates in a
+      /// plane parametrization.
       void coordinates( Point3 p, Real& x, Real& y );
 
       /// This method is called by Scene::init() at the beginning of the
       /// display in the OpenGL window. May be useful for some
       /// precomputations.
-      void init( RTViewer& /* viewer */ ) {}
+      virtual void init( RTViewer& /* viewer */ ) {}
 
       /// This method is called by Scene::draw() at each frame to
       /// redisplay objects in the OpenGL window.

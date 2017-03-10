@@ -38,9 +38,10 @@
 #include "raytracer/Sphere.h"
 #include "raytracer/Material.h"
 #include "raytracer/PointLight.h"
-#include "raytracer/PeriodicPlane.h"
+#include "raytracer/GraphicalPeriodicPlane.h"
 #include "raytracer/WaterPlane.h"
-#include "raytracer/Triangle.h"
+#include "raytracer/GraphicalTriangle.h"
+#include "raytracer/GraphicalParallelogram.h"
 
 using namespace std;
 using namespace DGtal;
@@ -58,29 +59,29 @@ void addBubble( Scene& scene, Point3 c, Real r, Material transp_m )
 
 void groundBlackAndGrey( Scene& scene, Point3 c )
 {
-  PeriodicPlane* pplane =
-    new PeriodicPlane( c, Vector3( 7, 0, 0 ), Vector3( 0, 7, 0 ),
+  GraphicalPeriodicPlane* pplane =
+    new GraphicalPeriodicPlane( c, Vector3( 7, 0, 0 ), Vector3( 0, 7, 0 ),
                        Material::greyMatter(), Material::blackMatter(), 0.05f );
   scene.addObject( pplane );
 }
 void groundWhite( Scene& scene )
 {
-  PeriodicPlane* pplane =
-    new PeriodicPlane( Point3( 0, 0, 0 ), Vector3( 5, 0, 0 ), Vector3( 0, 5, 0 ),
+  GraphicalPeriodicPlane* pplane =
+    new GraphicalPeriodicPlane( Point3( 0, 0, 0 ), Vector3( 5, 0, 0 ), Vector3( 0, 5, 0 ),
                        Material::whitePlastic(), Material::whitePlastic(), 0.00f );
   scene.addObject( pplane );
 }
 void groundWhiteAndBlack( Scene& scene, Real depth )
 {
-  PeriodicPlane* pplane =
-    new PeriodicPlane( Point3( 0, 0, -depth ), Vector3( 5, 0, 0 ), Vector3( 0, 5, 0 ),
+  GraphicalPeriodicPlane* pplane =
+    new GraphicalPeriodicPlane( Point3( 0, 0, -depth ), Vector3( 5, 0, 0 ), Vector3( 0, 5, 0 ),
                        Material::whitePlastic(), Material::blackMatter(), 0.05f );
   scene.addObject( pplane );
 }
 void shallowSand( Scene& scene, Real depth )
 {
-  PeriodicPlane* pplane =
-    new PeriodicPlane( Point3( 0, 0, -depth ), Vector3( 1, 0, 0 ), Vector3( 0, 1, 0 ),
+  GraphicalPeriodicPlane* pplane =
+    new GraphicalPeriodicPlane( Point3( 0, 0, -depth ), Vector3( 1, 0, 0 ), Vector3( 0, 1, 0 ),
                        Material::sand(), Material::sand(), 0.00f );
   scene.addObject( pplane );
 }
@@ -94,33 +95,51 @@ void water( Scene& scene, Point3 p )
 
 void backBuilding( Scene& scene, Real d )
 {
-  PeriodicPlane* plane =
-    new PeriodicPlane( Point3( 0, d, 0 ), Vector3( -2, 0, 0 ), Vector3( 0, 0, 4 ),
+  GraphicalPeriodicPlane* plane =
+    new GraphicalPeriodicPlane( Point3( 0, d, 0 ), Vector3( -2, 0, 0 ), Vector3( 0, 0, 4 ),
                        Material::mirror(), Material::blackMatter(), 0.025f );
   scene.addObject( plane );
 }
 void frontBuilding( Scene& scene, Real d )
 {
-  PeriodicPlane* plane =
-    new PeriodicPlane( Point3( 0, -d, 0 ), Vector3( 2, 0, 0 ), Vector3( 0, 0, 4 ),
+  GraphicalPeriodicPlane* plane =
+    new GraphicalPeriodicPlane( Point3( 0, -d, 0 ), Vector3( 2, 0, 0 ), Vector3( 0, 0, 4 ),
                        Material::mirror(), Material::blackMatter(), 0.025f );
   scene.addObject( plane );
 }
 
 void rightBuilding( Scene& scene, Real d )
 {
-  PeriodicPlane* plane =
-    new PeriodicPlane( Point3( d, 0, 0 ), Vector3( 0, -2, 0 ), Vector3( 0, 0, 4 ),
+  GraphicalPeriodicPlane* plane =
+    new GraphicalPeriodicPlane( Point3( d, 0, 0 ), Vector3( 0, -2, 0 ), Vector3( 0, 0, 4 ),
                        Material::mirror(), Material::blackMatter(), 0.025f );
   scene.addObject( plane );
 }
 
 void leftBuilding( Scene& scene, Real d )
 {
-  PeriodicPlane* pplane =
-    new PeriodicPlane( Point3( -d, 0, 0 ), Vector3( 0, 2, 0 ), Vector3( 0, 0, 4 ),
+  GraphicalPeriodicPlane* pplane =
+    new GraphicalPeriodicPlane( Point3( -d, 0, 0 ), Vector3( 0, 2, 0 ), Vector3( 0, 0, 4 ),
                        Material::mirror(), Material::blackMatter(), 0.025f );
   scene.addObject( pplane );
+}
+
+void cube( Scene& scene, Point3 C, Real side, Material main, Material band, Real w )
+{
+  Point3 A000 = C + Point3( -side/2.0f, -side/2.0f, -side/2.0f );
+  Point3 A001 = C + Point3( -side/2.0f, -side/2.0f,  side/2.0f );
+  Point3 A010 = C + Point3( -side/2.0f,  side/2.0f, -side/2.0f );
+  Point3 A011 = C + Point3( -side/2.0f,  side/2.0f,  side/2.0f );
+  Point3 A100 = C + Point3(  side/2.0f, -side/2.0f, -side/2.0f );
+  Point3 A101 = C + Point3(  side/2.0f, -side/2.0f,  side/2.0f );
+  Point3 A110 = C + Point3(  side/2.0f,  side/2.0f, -side/2.0f );
+  Point3 A111 = C + Point3(  side/2.0f,  side/2.0f,  side/2.0f );
+  scene.addObject( new GraphicalParallelogram( A000, A010, A100, main, band, w ) );
+  scene.addObject( new GraphicalParallelogram( A000, A001, A010, main, band, w ) );
+  scene.addObject( new GraphicalParallelogram( A000, A100, A001, main, band, w ) );
+  scene.addObject( new GraphicalParallelogram( A111, A011, A101, main, band, w ) );
+  scene.addObject( new GraphicalParallelogram( A111, A101, A110, main, band, w ) );
+  scene.addObject( new GraphicalParallelogram( A111, A110, A011, main, band, w ) );
 }
 
 void pyramid( Scene& scene, Point3 C, Real side, Material main, Material band, Real w )
@@ -130,10 +149,10 @@ void pyramid( Scene& scene, Point3 C, Real side, Material main, Material band, R
   Point3 A3 = C + Point3(  side/2.0f,  side/2.0f, 0.0f );
   Point3 A4 = C + Point3( -side/2.0f,  side/2.0f, 0.0f );
   Point3 T  = C + Point3(       0.0f,       0.0f, sqrt(2.0f)*side/2.0f );
-  scene.addObject( new Triangle( A1, A2, T, main, band, w ) );
-  scene.addObject( new Triangle( A2, A3, T, main, band, w ) );
-  scene.addObject( new Triangle( A3, A4, T, main, band, w ) );
-  scene.addObject( new Triangle( A4, A1, T, main, band, w ) );
+  scene.addObject( new GraphicalTriangle( A1, A2, T, main, band, w ) );
+  scene.addObject( new GraphicalTriangle( A2, A3, T, main, band, w ) );
+  scene.addObject( new GraphicalTriangle( A3, A4, T, main, band, w ) );
+  scene.addObject( new GraphicalTriangle( A4, A1, T, main, band, w ) );
 }
 
 int main(int argc, char** argv)
@@ -145,18 +164,18 @@ int main(int argc, char** argv)
   Scene scene;
   
   // Light at infinity
-  // Light* light0   = new PointLight( GL_LIGHT0, Vector4( 0, 0, 1, 0),
-  //                                   RealColor( 1.0, 1.0, 1.0 ) );
+  Light* light0   = new PointLight( GL_LIGHT0, Vector4( 0, 0, 1, 0),
+                                    RealColor( 1.0, 1.0, 1.0 ) );
   Light* light1   = new PointLight( GL_LIGHT1, Vector4( -10,-10,11,1),
                                     RealColor( 1.0, 1.0, 1.0 ) );
-  // scene.addLight( light0 );
+  scene.addLight( light0 );
   scene.addLight( light1 );
 
   // shallowSand( scene, 1.0f );
-  groundWhiteAndBlack( scene, 0.0f );
+  groundWhiteAndBlack( scene, 3.0f );
   // groundBlackAndGrey( scene, Point3( 0, 0, 0 ) );
   // leftBuilding( scene, 10.0 );
-  // water( scene, Point3( 0, 0, 0 ) );
+  water( scene, Point3( 0, 0, -2.0f ) );
 
   // Objects
   // Sphere* sphere1 = new Sphere( Point3( 0, 0, 3), 3.0, Material::mirror() );
@@ -168,12 +187,18 @@ int main(int argc, char** argv)
   scene.addObject( sphere2 );
   scene.addObject( sphere3 );
   scene.addObject( sphere4 );
-  pyramid( scene, Point3( -5, -5, -1 ), 6.0f, Material::ruby(), Material::blackMatter(), 0.025f );
-  pyramid( scene, Point3( -5, -5, -1 ), 5.0f, Material::mirror(), Material::mirror(), 0.00f );
-  pyramid( scene, Point3( 0, 0, -3 ), 25.0f, Material::glass(), Material::blackMatter(), 0.025f );
-  pyramid( scene, Point3( 0, 0, -3 ), 24.5f, Material::glass().revert(), Material::mirror(), 0.00f );
+  cube( scene, Point3( -5, -5, -1 ), 6.0f, Material::ruby(), Material::blackMatter(), 0.025f );
+  cube( scene, Point3( -5, -5, -1 ), 5.0f, Material::mirror(), Material::mirror(), 0.00f );
+  // pyramid( scene, Point3( -5, -5, -1 ), 6.0f, Material::ruby(), Material::blackMatter(), 0.025f );
+  // pyramid( scene, Point3( -5, -5, -1 ), 5.0f, Material::mirror(), Material::mirror(), 0.00f );
+  pyramid( scene, Point3( 0, 0, -3 ), 20.0f, Material::glass(), Material::blackMatter(), 0.025f );
+  pyramid( scene, Point3( 0, 0, -3 ), 19.5f, Material::glass().revert(), Material::mirror(), 0.00f );
 
-  addBubble( scene, Point3( -3, 4, 8 ), 4.0, Material::mirror() );
+  addBubble( scene, Point3( 0, 0, -3+10.0*sqrt(2.0) ), 2.0, Material::mirror() );
+  addBubble( scene, Point3( 10.0, 10.0, -3 ), 2.0, Material::mirror() );
+  addBubble( scene, Point3( -10.0, 10.0, -3 ), 2.0, Material::mirror() );
+  addBubble( scene, Point3( -10.0, -10.0, -3 ), 2.0, Material::mirror() );
+  addBubble( scene, Point3( 10.0, -10.0, -3 ), 2.0, Material::mirror() );
 
   // Instantiate the viewer.
   typedef Viewer3D<Space3,KSpace3> Viewer;

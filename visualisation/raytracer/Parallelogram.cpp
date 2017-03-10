@@ -14,7 +14,7 @@
  *
  **/
 /**
- * @file Triangle.cpp
+ * @file Parallelogram.cpp
  * @author Jacques-Olivier Lachaud (\c jacques-olivier.lachaud@univ-savoie.fr )
  * Laboratory of Mathematics (CNRS, UMR 5127), University of Savoie, France
  *
@@ -25,16 +25,16 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <cmath>
-#include "Triangle.h"
+#include "Parallelogram.h"
 
 
 DGtal::rt::Vector3
-DGtal::rt::Triangle::getNormal( Point3 /* p */ )
+DGtal::rt::Parallelogram::getNormal( Point3 /* p */ )
 {
   return N;
 }
 void
-DGtal::rt::Triangle::coordinates( Point3 p, Real& x, Real& y )
+DGtal::rt::Parallelogram::coordinates( Point3 p, Real& x, Real& y )
 {
   // // First project p onto the plane
   Point3 cp = p - A;
@@ -45,7 +45,7 @@ DGtal::rt::Triangle::coordinates( Point3 p, Real& x, Real& y )
 }
 
 DGtal::rt::Real
-DGtal::rt::Triangle::rayIntersection( const Ray& ray, Point3& p )
+DGtal::rt::Parallelogram::rayIntersection( const Ray& ray, Point3& p )
 {
   Real cos_a = ray.direction.dot( N );
   Real dist  = N.dot( ray.origin - A );
@@ -60,15 +60,6 @@ DGtal::rt::Triangle::rayIntersection( const Ray& ray, Point3& p )
   p = ray.origin + gamma * ray.direction;
   Real x, y;
   coordinates( p, x, y );
-  return ( ( x >= 0.0f ) && ( y >= 0.0f ) && ( (x+y) <= 1.0f ) )
-    ? -1.0f : fabs(x) + fabs( y );
-  // if ( ( x >= 0.0f ) && ( y >= 0.0f ) && ( (x+y) <= 1.0f ) )
-  //   return -1.0f;
-  // else
-  //   {
-  //     x = std::max( x, 0.0f );
-  //     y = std::max( y, 0.0f );
-  //     if ( ( x + y ) > 1.0f ) { x /= (x+y); y /= (x+y); }
-  //     return ( p - ( A + x * (B-A) + y * (C-A) ) ).norm();
-  //   }
+  return ( ( x >= 0.0f ) && ( y >= 0.0f ) && ( x <= 1.0f ) && ( y <= 1.0f ) )
+    ? -1.0f : std::max( std::max( -x, x-1.0 ), std::max( -y, y-1.0 ) );
 }

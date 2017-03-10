@@ -3,6 +3,7 @@ SET(DGTAL_TOOLS_SRC
         patternTriangulation
         3dCurvatureViewer
         3dCurvatureViewerNoise
+        testStandardDSL3d
 )
 
 foreach (FILE ${DGTAL_TOOLS_SRC})
@@ -43,7 +44,17 @@ if (  WITH_VISU3D_QGLVIEWER )
                                 LIBRARY DESTINATION lib
                                 ARCHIVE DESTINATION lib)
 
-  add_executable(3dVolRayTracer 3dVolRayTracer raytracer/RayTracerViewerExtension raytracer/Sphere raytracer/Triangle raytracer/WaterPlane raytracer/PeriodicPlane )
+  add_executable( 3dVolRayTracer 3dVolRayTracer
+                  raytracer/RayTracerViewerExtension
+                  raytracer/Sphere
+                  raytracer/Triangle
+                  raytracer/GraphicalTriangle
+                  raytracer/WaterPlane
+                  raytracer/PeriodicPlane
+                  raytracer/Parallelogram
+                  raytracer/GraphicalParallelogram
+                  raytracer/GraphicalPeriodicPlane )
+                  
   target_link_libraries(3dVolRayTracer ${DGTAL_LIBRARIES} ${DGtalToolsLibDependencies})
   install(TARGETS 3dVolRayTracer RUNTIME DESTINATION bin
                                 LIBRARY DESTINATION lib
