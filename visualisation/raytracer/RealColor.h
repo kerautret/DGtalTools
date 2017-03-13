@@ -41,6 +41,7 @@
 
 namespace DGtal {
   namespace rt {
+
     /// This structure codes the color of an object, as well as its
     /// transparency. Color channels are stored as floating point values
     /// between 0 and 1.
