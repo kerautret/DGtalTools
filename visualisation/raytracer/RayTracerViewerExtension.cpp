@@ -63,10 +63,8 @@ DGtal::rt::RayTracerViewerExtension::init( Viewer& viewer )
   
   // Opens help window
   // help();
-  
   // To move lights around
   // setMouseTracking(true);
-  
   // Gives a bounding box to the camera
   //viewer.camera()->setSceneBoundingBox( qglviewer::Vec( -7, -7, -2 ),qglviewer::Vec( 7, 7, 12 ) );
 }

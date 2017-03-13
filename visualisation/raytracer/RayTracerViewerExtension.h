@@ -84,22 +84,8 @@ namespace DGtal {
       void setScene( DGtal::rt::Scene& aScene )
       {
         ptrScene = &aScene;
-        // // Inits the scene
-        // if ( ptrScene != 0 )
-        //   ptrScene->init( *this );
       }
     
-      // /// To call the protected method `drawLight`.
-      // void drawSomeLight( GLenum light ) const
-      // {
-      //   viewer.drawLight( light );
-      // }
-      // /// To call the protected method `drawLight`.
-      // void drawSomeLight( GLenum light, float zoom ) const
-      // {
-      //   viewer.drawLight( light, zoom );
-      // }
-
       /// Called at each draw of the window
       virtual void draw( Viewer& viewer );
 
