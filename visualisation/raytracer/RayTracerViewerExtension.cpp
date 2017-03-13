@@ -86,14 +86,14 @@ DGtal::rt::RayTracerViewerExtension::keyPressEvent( Viewer& viewer, QKeyEvent *e
       Renderer renderer( *ptrScene );
       qglviewer::Vec orig, dir;
       viewer.camera()->convertClickToLine( QPoint( 0,0 ), orig, dir );
-      Vector3 origin( orig );
-      Vector3 dirUL( dir );
+      Vector3 origin( toPoint3( orig ) );
+      Vector3 dirUL( toPoint3( dir ) );
       viewer.camera()->convertClickToLine( QPoint( w,0 ), orig, dir );
-      Vector3 dirUR( dir );
+      Vector3 dirUR( toPoint3( dir ) );
       viewer.camera()->convertClickToLine( QPoint( 0, h ), orig, dir );
-      Vector3 dirLL( dir );
+      Vector3 dirLL( toPoint3( dir ) );
       viewer.camera()->convertClickToLine( QPoint( w, h ), orig, dir );
-      Vector3 dirLR( dir );
+      Vector3 dirLR( toPoint3( dir ) );
       renderer.setViewBox( origin, dirUL, dirUR, dirLL, dirLR );
       if ( modifiers == Qt::ShiftModifier ) { w /= 2; h /= 2; }
       else if ( modifiers == Qt::NoModifier ) { w /= 8; h /= 8; }

@@ -44,6 +44,7 @@ if (  WITH_VISU3D_QGLVIEWER )
                                 LIBRARY DESTINATION lib
                                 ARCHIVE DESTINATION lib)
 
+  set(CMAKE_INCLUDE_CURRENT_DIR ON)
   add_executable( 3dVolRayTracer 3dVolRayTracer
                   raytracer/RayTracerViewerExtension
                   raytracer/Sphere

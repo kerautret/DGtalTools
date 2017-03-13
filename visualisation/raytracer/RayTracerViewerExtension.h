@@ -80,6 +80,16 @@ namespace DGtal {
                                 int depth = 6 )
         : ptrScene( &aScene ), maxDepth( depth ) {}
       
+
+      static Point3 toPoint3( const qglviewer::Vec& v )
+      {
+        return Point3( (Real) v[ 0 ], (Real) v[ 1 ], (Real) v[ 2 ] );
+      }
+      static qglviewer::Vec toVec( const Point3& v )
+      {
+        return qglviewer::Vec( (float) v[ 0 ], (float) v[ 1 ], (float) v[ 2 ] );
+      }
+
       /// Sets the scene
       void setScene( DGtal::rt::Scene& aScene )
       {
