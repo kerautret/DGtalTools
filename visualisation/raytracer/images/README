@@ -1,0 +1,4 @@
+# cthead-1.png
+./visualisation/3dVolRayTracer ~/Images/3d/vol/CThead-256x256x113.vol 100 rPlastic
+# republic-cruiser-1.png
+./visualisation/3dVolRayTracer ~/Images/3d/vol/RepublicCruiser/RepublicCruiser.450.vol 0 bWater 
