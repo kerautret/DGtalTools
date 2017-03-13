@@ -217,7 +217,8 @@ namespace DGtal {
       
       /// Constructor from ray and digitization precision.
       StandardDSL3d( const Ray& aRay, Coordinate precision )
-        : xy(0,0,0), xz(0,0,0), yz(0,0,0)
+        : xy(0,0,0), xz(0,0,0), yz(0,0,0),
+          xyValid( false ), xzValid( false ), yzValid( false )
       {
         Coordinate ux = (Coordinate) round( aRay.direction[ 0 ] * (Real) precision );
         Coordinate uy = (Coordinate) round( aRay.direction[ 1 ] * (Real) precision );
@@ -225,39 +226,42 @@ namespace DGtal {
         Coordinate gxy = IntegerComputer<Coordinate>::staticGcd( ux, uy );
         Coordinate gxz = IntegerComputer<Coordinate>::staticGcd( ux, uz );
         Coordinate gyz = IntegerComputer<Coordinate>::staticGcd( uy, uz );
-        trace.info() << "or=" << aRay.origin << std::endl;
-        trace.info() << "di=" << aRay.direction << std::endl;
-        trace.info() << "ux=" << ux << " uy=" << uy << " uz=" << uz << std::endl;
-        trace.info() << "po=" << getPoint( aRay.origin ) << std::endl;
-        // Coordinate px = (Coordinate) round( aRay.origin[ 0 ]
-        //                                     + aRay.direction[ 0 ] * (Real) precision );
-        // Coordinate py = (Coordinate) round( aRay.origin[ 1 ]
-        //                                     + aRay.direction[ 1 ] * (Real) precision );
-        // Coordinate pz = (Coordinate) round( aRay.origin[ 2 ]
-        //                                     + aRay.direction[ 2 ] * (Real) precision );
-        // Coordinate mz = StandardDSL::remainder( uy, ux, Point2i( px, py ) );
-        // Coordinate my = StandardDSL::remainder( uz, ux, Point2i( px, pz ) );
-        // Coordinate mx = StandardDSL::remainder( uz, uy, Point2i( py, pz ) );
-        Point3 q = aRay.origin + (Real) precision * Point3( ux, uy, uz );
-        Coordinate mz = (Coordinate) round( uy / gxy * q[ 0 ] - ux / gxy * q[ 1 ]
-                                            - 0.5*( std::abs( ux / gxy )+std::abs( uy / gxy )-1 ) );
-        Coordinate my = (Coordinate) round( uz / gxz * q[ 0 ] - ux / gxz * q[ 2 ]
-                                            - 0.5*( std::abs( ux / gxz )+std::abs( uz / gxz )-1 ) );
-        Coordinate mx = (Coordinate) round( uz / gyz * q[ 1 ] - uy / gyz * q[ 2 ]
-                                            - 0.5*( std::abs( uy / gyz )+std::abs( uz / gyz )-1 ) );
-        // xy = StandardDSL( uy, ux, mz );
-        // xz = StandardDSL( uz, ux, my );
-        // yz = StandardDSL( uz, uy, mx );
-        // // Shift lines so that p is at their center
-        // mz = ( 2*mz - xy.omega() ) / 2;
-        // my = ( 2*my - xz.omega() ) / 2;
-        // mx = ( 2*mx - yz.omega() ) / 2;
-        xy = StandardDSL( uy / gxy, ux / gxy, mz );
-        xz = StandardDSL( uz / gxz, ux / gxz, my );
-        yz = StandardDSL( uz / gyz, uy / gyz, mx );
-        trace.info() << "xy=" << xy << std::endl;
-        trace.info() << "xz=" << xz << std::endl;
-        trace.info() << "yz=" << yz << std::endl;
+        // trace.info() << "or=" << aRay.origin << std::endl;
+        // trace.info() << "di=" << aRay.direction << std::endl;
+        // trace.info() << "ux=" << ux << " uy=" << uy << " uz=" << uz << std::endl;
+        // trace.info() << "gxy=" << gxy << " gxz=" << gxz << " gyz=" << gyz << std::endl;
+        // trace.info() << "po=" << getPoint( aRay.origin ) << std::endl;
+        Point3 q = aRay.origin;
+        if ( gxy != 0 )
+          {
+            Coordinate a  = uy / gxy;
+            Coordinate b  = ux / gxy;
+            Coordinate mu = (Coordinate) round( a * q[ 0 ] - b * q[ 1 ]
+                                                - 0.5*( std::abs(a)+std::abs(b)-1 ) );
+            xy = StandardDSL( a, b, mu );
+            xyValid = true;
+          }
+        if ( gxz != 0 )
+          {
+            Coordinate a  = uz / gxz;
+            Coordinate b  = ux / gxz;
+            Coordinate mu = (Coordinate) round( a * q[ 0 ] - b * q[ 2 ]
+                                                - 0.5*( std::abs(a)+std::abs(b)-1 ) );
+            xz = StandardDSL( a, b, mu );
+            xzValid = true;
+          }
+        if ( gyz != 0 )
+          {
+            Coordinate a  = uz / gyz;
+            Coordinate b  = uy / gyz;
+            Coordinate mu = (Coordinate) round( a * q[ 1 ] - b * q[ 2 ]
+                                                - 0.5*( std::abs(a)+std::abs(b)-1 ) );
+            yz = StandardDSL( a, b, mu );
+            yzValid = true;
+          }
+        // trace.info() << "xy=" << xy << std::endl;
+        // trace.info() << "xz=" << xz << std::endl;
+        // trace.info() << "yz=" << yz << std::endl;
         if ( ! isInDSL( getPoint( aRay.origin ) ) )
           trace.warning() << "Ray origin is not in DSL 3d." << std::endl;
       }
@@ -282,9 +286,32 @@ namespace DGtal {
           &&   yz.isInDSL( Point2i( p[ 1 ], p[ 2 ] ) );
       }
 
+      static Point2i projectXY( const Point3i& p )
+      {
+        return Point2i( p[ 0 ], p[ 1 ] );
+      }
+      static Point2i projectXZ( const Point3i& p )
+      {
+        return Point2i( p[ 0 ], p[ 2 ] );
+      }
+      static Point2i projectYZ( const Point3i& p )
+      {
+        return Point2i( p[ 1 ], p[ 2 ] );
+      }
+      bool before( const Point3i& p1, const Point3i& p2 ) const
+      {
+        return ( p1 != p2 ) && beforeOrEqual( p1, p2 );
+      }
+      bool beforeOrEqual( const Point3i& p1, const Point3i& p2 ) const
+      {
+        return ( !xyValid || ( xy.beforeOrEqual( projectXY( p1 ), projectXY( p2 ) ) ) )
+          &&   ( !xzValid || ( xz.beforeOrEqual( projectXZ( p1 ), projectXZ( p2 ) ) ) )
+          &&   ( !yzValid || ( yz.beforeOrEqual( projectYZ( p1 ), projectYZ( p2 ) ) ) );
+      }
+      
       /// The three projections of the 3D standard digital straight line
       StandardDSL xy, yz, xz;
-
+      bool xyValid, yzValid, xzValid;
     };
   } //  namespace rt {
 } // namespace DGtal {

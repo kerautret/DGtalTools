@@ -37,16 +37,32 @@ using namespace DGtal::rt;
 
 bool testDSLRay( const Ray& ray, int precision )
 {
+  static const Real distance = sqrt(3.0);
   int nbok = 0, nb = 0;
   StandardDSL3d D( ray, precision );
   auto it = D.begin( D.getPoint( ray.origin ) );
-  for ( unsigned i = 0; i < precision; i++,nb++ )
+  Point3i prev = *it;
+  Vector3 u    = ray.direction / ray.direction.norm();
+  for ( unsigned i = 0; i < precision; i++ )
     {
+      // Point is close to ray
+      Point3 pos( *it );
+      Vector3 n = ( pos - ray.origin )  - u.dot( pos - ray.origin ) * u;
+      if ( n.norm() <= distance ) nbok++; 
+      // Point is correct
       if ( D.isInDSL( *it ) ) nbok++;
-      std::cout << " " << *it++;
+      it++;
+      // Point is just beside previous one.
+      if ( (*it - prev).norm1() == 1 ) nbok++;
+      // Point is after previous one.
+      if ( D.before( prev, *it ) ) nbok++;
+      prev = *it;
+      nb  += 4;
     }
-  std::cout << std::endl;
-  std::cout << "(" << nbok << "/" << nb << ")" << std::endl;
+  if ( nbok != nb )
+    std::cout << "(" << nbok << "/" << nb << ")"
+              << " for 3d ray orig=" << ray.origin
+              << " dir=" << ray.direction << " prec=" << precision << std::endl;
   return nbok == nb;
 }
 
@@ -57,14 +73,16 @@ double rand01()
 
 int main( int argc, char** argv )
 {
-  int nbok = 0, nb = 100;
+  int nbok = 0, nb = 10000;
   bool ok = true;
   for ( int i = 0; i < nb; ++i )
     {
       Vector3 dir( rand01()-0.5, rand01()-0.5, rand01()-0.5 );
+      while ( fabs( dir.norm() ) < 0.000001 )
+        dir = Vector3( rand01()-0.5, rand01()-0.5, rand01()-0.5 );
       dir /= dir.norm();
       Vector3 p  ( 10.0*(rand01()-0.5), 10.0*(rand01()-0.5), 10.0*(rand01()-0.5) );
-      int precision = (int) ( rand01()*100.0+5.0 );
+      int precision = (int) ( rand01()*1000.0+5.0 );
       if ( testDSLRay( Ray( p, dir ), precision ) )
         nbok++;
       else

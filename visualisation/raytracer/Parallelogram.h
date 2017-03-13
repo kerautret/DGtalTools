@@ -58,7 +58,10 @@ namespace DGtal {
       Vector3 U;
       /// A vector orthogonal to AB and N.
       Vector3 V;
-    
+
+      /// Default constructor.
+      inline
+      Parallelogram() {}
       /// Creates a parallelogram of vertices \a a, \a b and \a c, and
       /// last vertex is computed as \f$ a + b-a + c-a \f$.
       inline

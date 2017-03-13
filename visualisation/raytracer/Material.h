@@ -184,7 +184,7 @@ namespace DGtal {
         m.diffuse   = RealColor( 0.1, 0.1, 0.1 );
         m.specular  = RealColor( 0.2, 0.2, 0.2 );
         m.shinyness = 0.5f;
-        m.coef_diffusion  = 0.4f;
+        m.coef_diffusion  = 1.0f;
         m.coef_reflexion  = 0.0f;
         m.coef_refraction = 0.0f;
         m.in_refractive_index  = 1.0f;
@@ -241,7 +241,7 @@ namespace DGtal {
         m.specular  = RealColor( 0.5, 0.5, 0.5 );
         m.shinyness = 0.5f;
         m.coef_diffusion  = 1.0f;
-        m.coef_reflexion  = 0.05f;
+        m.coef_reflexion  = 0.00f;
         m.coef_refraction = 0.0f;
         m.in_refractive_index  = 1.0f;
         m.out_refractive_index = 1.0f;
@@ -253,9 +253,9 @@ namespace DGtal {
         m.ambient   = RealColor( 0.05, 0.05, 0.05 );
         m.diffuse   = RealColor( 0.3, 0.3, 0.31 );
         m.specular  = RealColor( 0.7, 0.7, 0.71 );
-        m.shinyness = 25.0f;
-        m.coef_diffusion  = 0.5f;
-        m.coef_reflexion  = 0.5f;
+        m.shinyness = 10.0f;
+        m.coef_diffusion  = 0.8f;
+        m.coef_reflexion  = 0.2f;
         m.coef_refraction = 0.0f;
         m.in_refractive_index  = 1.0f;
         m.out_refractive_index = 1.0f;
@@ -272,6 +272,20 @@ namespace DGtal {
         m.coef_reflexion  = 0.25f;
         m.coef_refraction = 0.5f;
         m.in_refractive_index  = 1.5f;
+        m.out_refractive_index = 1.0f;
+        return m;
+      }
+      static Material greyMettalic() 
+      {
+        Material m;
+        m.ambient   = RealColor( 0.05, 0.05, 0.05 );
+        m.diffuse   = RealColor( 0.75, 0.75, 0.8 );
+        m.specular  = RealColor( 1.0, 1.0, 1.0 );
+        m.shinyness = 30.0f;
+        m.coef_diffusion  = 0.9f;
+        m.coef_reflexion  = 0.1f;
+        m.coef_refraction = 0.0f;
+        m.in_refractive_index  = 1.0f;
         m.out_refractive_index = 1.0f;
         return m;
       }

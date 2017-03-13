@@ -39,6 +39,11 @@
 #include "DGtal/kernel/SpaceND.h"
 #include "DGtal/topology/KhalimskySpaceND.h"
 
+#define RT_EPSILON 0.00001
+// precision of line digitization
+#define RT_PRECISION 1000
+// inverse of RT_PRECISION
+#define RT_BANDWIDTH 0.001
 
 namespace DGtal {
   /// Namespace RayTracer
@@ -63,6 +68,8 @@ namespace DGtal {
 
     typedef Vector3::Component  Real;
 
+    
+    
     /// This structure stores a ray having an origin and a direction. It
     /// also stores its depth.
     struct Ray {

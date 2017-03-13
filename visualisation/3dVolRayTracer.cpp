@@ -33,6 +33,10 @@
 #include <sstream>
 #include <string>
 
+#include <DGtal/io/readers/VolReader.h>
+#include <DGtal/images/ImageContainerBySTLVector.h>
+#include <DGtal/images/SimpleThresholdForegroundPredicate.h>
+
 #include "raytracer/RayTracerViewerExtension.h"
 #include "raytracer/Scene.h"
 #include "raytracer/Sphere.h"
@@ -42,6 +46,7 @@
 #include "raytracer/WaterPlane.h"
 #include "raytracer/GraphicalTriangle.h"
 #include "raytracer/GraphicalParallelogram.h"
+#include "raytracer/GraphicalDigitalVolume.h"
 
 using namespace std;
 using namespace DGtal;
@@ -142,6 +147,23 @@ void cube( Scene& scene, Point3 C, Real side, Material main, Material band, Real
   scene.addObject( new GraphicalParallelogram( A111, A110, A011, main, band, w ) );
 }
 
+Material string2material( const std::string& s )
+{
+  if      ( s == "bronze"   ) return Material::bronze();
+  else if ( s == "emerald"  ) return Material::emerald();
+  else if ( s == "ruby"     ) return Material::ruby();
+  else if ( s == "mirror"   ) return Material::mirror();
+  else if ( s == "wPlastic" ) return Material::whitePlastic();
+  else if ( s == "rPlastic" ) return Material::redPlastic();
+  else if ( s == "glass"    ) return Material::glass();
+  else if ( s == "bMatter"  ) return Material::blackMatter();
+  else if ( s == "gMatter"  ) return Material::greyMatter();
+  else if ( s == "sand"     ) return Material::sand();
+  else if ( s == "bWater"   ) return Material::blueWater();
+  else if ( s == "steel"    ) return Material::steel();
+  else if ( s == "gMetallic") return Material::greyMettalic();
+  else return Material::whitePlastic();
+}
 void pyramid( Scene& scene, Point3 C, Real side, Material main, Material band, Real w )
 {
   Point3 A1 = C + Point3( -side/2.0f, -side/2.0f, 0.0f );
@@ -165,40 +187,67 @@ int main(int argc, char** argv)
   
   // Light at infinity
   Light* light0   = new PointLight( GL_LIGHT0, Vector4( 0, 0, 1, 0),
-                                    RealColor( 1.0, 1.0, 1.0 ) );
-  Light* light1   = new PointLight( GL_LIGHT1, Vector4( -10,-10,11,1),
-                                    RealColor( 1.0, 1.0, 1.0 ) );
+                                    RealColor( 0.9, 0.9, 0.9 ) );
+  Light* light1   = new PointLight( GL_LIGHT1, Vector4( -50,-50,50,1),
+                                    RealColor( 0.6, 0.6, 0.6 ) );
+  Light* light2   = new PointLight( GL_LIGHT2, Vector4( -50,-50,40,1),
+                                    RealColor( 0.4, 0.4, 0.4 ) );
   scene.addLight( light0 );
   scene.addLight( light1 );
+  scene.addLight( light2 );
 
+  if ( argc > 1 )
+    {
+      std::string  inputFilename = argv[ 1 ];
+      unsigned int threshold     = argc > 2 ? atoi( argv[ 2 ] ) : 1;
+      std::string  material      = argc > 3 ? argv[ 3 ] : "rPlastic";
+      trace.beginBlock( "Reading vol file into an image." );
+      typedef HyperRectDomain< Space3 >                 Domain;
+      typedef ImageContainerBySTLVector< Domain, int >  Image;
+      typedef ImageContainerBySTLVector< Domain, bool > BooleanImage;
+      typedef functors::SimpleThresholdForegroundPredicate<Image> ThresholdedImage;
+      typedef GraphicalDigitalVolume< BooleanImage >    Volume;
+      Image image = VolReader<Image>::importVol(inputFilename);
+      ThresholdedImage thresholdedImage( image, threshold );
+      trace.endBlock();
+      trace.beginBlock( "Making binary image and building digital volume." );
+      BooleanImage bimage( image.domain() );
+      for ( auto p : bimage.domain() )
+        bimage.setValue( p, thresholdedImage( p ) );
+      Volume* vol = new Volume( bimage, string2material( material ) );
+      scene.addObject( vol );
+      trace.endBlock();
+    }
+
+  
   // shallowSand( scene, 1.0f );
-  groundWhiteAndBlack( scene, 3.0f );
+  groundWhiteAndBlack( scene, 0.0f );
   // groundBlackAndGrey( scene, Point3( 0, 0, 0 ) );
   // leftBuilding( scene, 10.0 );
-  water( scene, Point3( 0, 0, -2.0f ) );
+  // water( scene, Point3( 0, 0, -2.0f ) );
 
   // Objects
   // Sphere* sphere1 = new Sphere( Point3( 0, 0, 3), 3.0, Material::mirror() );
-  Sphere* sphere1 = new Sphere( Point3( 0, 0, 0), 2.0, Material::bronze() );
-  Sphere* sphere2 = new Sphere( Point3( 0, 4, 0.5), 1.0, Material::emerald() );
-  Sphere* sphere3 = new Sphere( Point3( 6, 6, 0), 3.0, Material::whitePlastic() );
-  Sphere* sphere4 = new Sphere( Point3( 5, 0, 0), 3.0, Material::bronze() );
+  Sphere* sphere1 = new Sphere( Point3( -20, 0, 20), 20.0, Material::bronze() );
+  // Sphere* sphere2 = new Sphere( Point3( 0, 4, 0.5), 1.0, Material::emerald() );
+  // Sphere* sphere3 = new Sphere( Point3( 6, 6, 0), 3.0, Material::whitePlastic() );
+  // Sphere* sphere4 = new Sphere( Point3( 5, 0, 0), 3.0, Material::bronze() );
   scene.addObject( sphere1 );
-  scene.addObject( sphere2 );
-  scene.addObject( sphere3 );
-  scene.addObject( sphere4 );
-  cube( scene, Point3( -5, -5, -1 ), 6.0f, Material::ruby(), Material::blackMatter(), 0.025f );
-  cube( scene, Point3( -5, -5, -1 ), 5.0f, Material::mirror(), Material::mirror(), 0.00f );
+  // scene.addObject( sphere2 );
+  // scene.addObject( sphere3 );
+  // scene.addObject( sphere4 );
+  // cube( scene, Point3( -5, -5, -1 ), 6.0f, Material::ruby(), Material::blackMatter(), 0.025f );
+  // cube( scene, Point3( -5, -5, -1 ), 5.0f, Material::mirror(), Material::mirror(), 0.00f );
   // pyramid( scene, Point3( -5, -5, -1 ), 6.0f, Material::ruby(), Material::blackMatter(), 0.025f );
   // pyramid( scene, Point3( -5, -5, -1 ), 5.0f, Material::mirror(), Material::mirror(), 0.00f );
-  pyramid( scene, Point3( 0, 0, -3 ), 20.0f, Material::glass(), Material::blackMatter(), 0.025f );
-  pyramid( scene, Point3( 0, 0, -3 ), 19.5f, Material::glass().revert(), Material::mirror(), 0.00f );
+  // pyramid( scene, Point3( 0, 0, -3 ), 20.0f, Material::glass(), Material::blackMatter(), 0.025f );
+  // pyramid( scene, Point3( 0, 0, -3 ), 19.5f, Material::glass().revert(), Material::mirror(), 0.00f );
 
-  addBubble( scene, Point3( 0, 0, -3+10.0*sqrt(2.0) ), 2.0, Material::mirror() );
-  addBubble( scene, Point3( 10.0, 10.0, -3 ), 2.0, Material::mirror() );
-  addBubble( scene, Point3( -10.0, 10.0, -3 ), 2.0, Material::mirror() );
-  addBubble( scene, Point3( -10.0, -10.0, -3 ), 2.0, Material::mirror() );
-  addBubble( scene, Point3( 10.0, -10.0, -3 ), 2.0, Material::mirror() );
+  // addBubble( scene, Point3( 0, 0, -3+10.0*sqrt(2.0) ), 2.0, Material::mirror() );
+  // addBubble( scene, Point3( 10.0, 10.0, -3 ), 2.0, Material::mirror() );
+  // addBubble( scene, Point3( -10.0, 10.0, -3 ), 2.0, Material::mirror() );
+  // addBubble( scene, Point3( -10.0, -10.0, -3 ), 2.0, Material::mirror() );
+  // addBubble( scene, Point3( 10.0, -10.0, -3 ), 2.0, Material::mirror() );
 
   // Instantiate the viewer.
   typedef Viewer3D<Space3,KSpace3> Viewer;

@@ -53,7 +53,8 @@ if (  WITH_VISU3D_QGLVIEWER )
                   raytracer/PeriodicPlane
                   raytracer/Parallelogram
                   raytracer/GraphicalParallelogram
-                  raytracer/GraphicalPeriodicPlane )
+                  raytracer/GraphicalPeriodicPlane
+                  )
                   
   target_link_libraries(3dVolRayTracer ${DGTAL_LIBRARIES} ${DGtalToolsLibDependencies})
   install(TARGETS 3dVolRayTracer RUNTIME DESTINATION bin

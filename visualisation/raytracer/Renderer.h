@@ -201,7 +201,7 @@ namespace DGtal {
         Point3 shadow_p;
         while ( light_color.max() > 0.003 )
           {
-            Ray shadow_ray( moving_p + 0.00001*ray.direction, ray.direction );
+            Ray shadow_ray( moving_p + RT_EPSILON*ray.direction, ray.direction );
             Real shadow_d2 = ptrScene->rayIntersection( shadow_ray, shadow_obj, shadow_p );
             if ( shadow_d2 >= 0.0 ) break; // found no intersection.
             // Checks if the intersected material was transparent
