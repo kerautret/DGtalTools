@@ -187,11 +187,11 @@ int main(int argc, char** argv)
   
   // Light at infinity
   Light* light0   = new PointLight( GL_LIGHT0, Vector4( 0, 0, 1, 0),
-                                    RealColor( 0.9, 0.9, 0.9 ) );
+                                    RealColor( 1.0, 1.0, 1.0 ) );
   Light* light1   = new PointLight( GL_LIGHT1, Vector4( -50,-50,50,1),
-                                    RealColor( 0.6, 0.6, 0.6 ) );
+                                    RealColor( 0.8, 0.8, 0.8 ) );
   Light* light2   = new PointLight( GL_LIGHT2, Vector4( -50,-50,40,1),
-                                    RealColor( 0.4, 0.4, 0.4 ) );
+                                    RealColor( 0.7, 0.7, 0.7 ) );
   scene.addLight( light0 );
   scene.addLight( light1 );
   scene.addLight( light2 );
@@ -227,11 +227,12 @@ int main(int argc, char** argv)
   // water( scene, Point3( 0, 0, -2.0f ) );
 
   // Objects
-  // Sphere* sphere1 = new Sphere( Point3( 0, 0, 3), 3.0, Material::mirror() );
-  Sphere* sphere1 = new Sphere( Point3( -20, 0, 20), 20.0, Material::bronze() );
+  Sphere* sphere0 = new Sphere( Point3( -600, 200, 800), 800.0, Material::emerald() );
+  Sphere* sphere1 = new Sphere( Point3( -20, 0, 40), 40.0, Material::bronze() );
   // Sphere* sphere2 = new Sphere( Point3( 0, 4, 0.5), 1.0, Material::emerald() );
   // Sphere* sphere3 = new Sphere( Point3( 6, 6, 0), 3.0, Material::whitePlastic() );
   // Sphere* sphere4 = new Sphere( Point3( 5, 0, 0), 3.0, Material::bronze() );
+  scene.addObject( sphere0 );
   scene.addObject( sphere1 );
   // scene.addObject( sphere2 );
   // scene.addObject( sphere3 );
