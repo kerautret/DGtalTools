@@ -33,9 +33,16 @@
 #include <sstream>
 #include <string>
 
+#include <boost/program_options/options_description.hpp>
+#include <boost/program_options/parsers.hpp>
+#include <boost/program_options/variables_map.hpp>
+
 #include <DGtal/io/readers/VolReader.h>
 #include <DGtal/images/ImageContainerBySTLVector.h>
-#include <DGtal/images/SimpleThresholdForegroundPredicate.h>
+#include <DGtal/images/IntervalForegroundPredicate.h>
+#include <DGtal/topology/SetOfSurfels.h>
+#include <DGtal/topology/DigitalSurface.h>
+#include <DGtal/topology/helpers/Surfaces.h>
 
 #include "raytracer/RayTracerViewerExtension.h"
 #include "raytracer/Scene.h"
@@ -47,10 +54,12 @@
 #include "raytracer/GraphicalTriangle.h"
 #include "raytracer/GraphicalParallelogram.h"
 #include "raytracer/GraphicalDigitalVolume.h"
+#include "raytracer/NormalEstimation.h"
 
 using namespace std;
 using namespace DGtal;
 using namespace DGtal::rt;
+namespace po = boost::program_options;
 
 void addBubble( Scene& scene, Point3 c, Real r, Material transp_m )
 {
@@ -76,11 +85,11 @@ void groundWhite( Scene& scene )
                        Material::whitePlastic(), Material::whitePlastic(), 0.00f );
   scene.addObject( pplane );
 }
-void groundWhiteAndBlack( Scene& scene, Real depth )
+void groundWhiteAndBlack( Scene& scene, Real depth, Real size = 5.0 )
 {
   GraphicalPeriodicPlane* pplane =
-    new GraphicalPeriodicPlane( Point3( 0, 0, -depth ), Vector3( 5, 0, 0 ), Vector3( 0, 5, 0 ),
-                       Material::whitePlastic(), Material::blackMatter(), 0.05f );
+    new GraphicalPeriodicPlane( Point3( 0, 0, -depth ), Vector3( size, 0, 0 ), Vector3( 0, size, 0 ),
+                       Material::whitePlastic(), Material::blackMatter(), 0.05*size );
   scene.addObject( pplane );
 }
 void shallowSand( Scene& scene, Real depth )
@@ -177,10 +186,49 @@ void pyramid( Scene& scene, Point3 C, Real side, Material main, Material band, R
   scene.addObject( new GraphicalTriangle( A4, A1, T, main, band, w ) );
 }
 
-int main(int argc, char** argv)
+
+///////////////////////////////////////////////////////////////////////////////
+int main( int argc, char** argv )
 {
   // Read command lines arguments.
   QApplication application(argc,argv);
+
+  // parse command line ----------------------------------------------
+  namespace po = boost::program_options;
+  po::options_description general_opt("Allowed options are: ");
+  general_opt.add_options()
+    ("help,h", "display this message")
+    ("input,i", po::value<std::string>(), "vol file (.vol) , pgm3d (.p3d or .pgm3d, pgm (with 3 dims)) file or sdp (sequence of discrete points)" )
+    ("thresholdMin,m",  po::value<int>()->default_value(0), "threshold min (excluded) to define binary shape" )
+    ("thresholdMax,M",  po::value<int>()->default_value(255), "threshold max (included) to define binary shape" )
+    ("gridstep,g", po::value< double >()->default_value( 1.0 ), "the gridstep that defines the digitization (often called h). " )
+    ("estimator,e", po::value<string>()->default_value( "True" ), "the chosen normal estimator: True | VCM | II | Trivial" )
+    ("R-radius,R", po::value<double>()->default_value( 5 ), "the constant for parameter R in R(h)=R h^alpha (VCM)." )
+    ("r-radius,r", po::value<double>()->default_value( 3 ), "the constant for parameter r in r(h)=r h^alpha (VCM,II,Trivial)." )
+    ("kernel,k", po::value<string>()->default_value( "hat" ), "the function chi_r, either hat or ball." )
+    ("alpha", po::value<double>()->default_value( 0.0 ), "the parameter alpha in r(h)=r h^alpha (VCM)." )
+    ("trivial-radius,t", po::value<double>()->default_value( 3 ), "the parameter t defining the radius for the Trivial estimator. Also used for reorienting the VCM." )
+    ("embedding,E", po::value<int>()->default_value( 0 ), "the surfel -> point embedding for VCM estimator: 0: Pointels, 1: InnerSpel, 2: OuterSpel." )
+    ;
+  bool parseOK=true;
+  po::variables_map vm;
+  try{
+    po::store(po::parse_command_line(argc, argv, general_opt), vm);
+  }catch(const exception& ex){
+    parseOK=false;
+    cerr << "Error checking program options: "<< ex.what()<< endl;
+  }
+  po::notify(vm);
+  if( ! parseOK || vm.count("help") )
+    {
+      cerr << "Usage: " << argv[0] << " -i <volume.vol> [options]\n"
+           << "Displays then may compute a 3D raytracer rendering of the volume given as input. You may choose several normal estimators (II|VCM|Trivial|True), specified with -e."
+           << endl
+           << general_opt << "\n";
+      cerr << "Example of use:\n"
+           << "./3dVolRayTracer -i \"fandisk-128.vol\" -e VCM -R 3 -r 3 -t 2 -E 0" << endl << endl;
+        return 0;
+    }
   
   // Creates a 3D scene
   Scene scene;
@@ -196,43 +244,57 @@ int main(int argc, char** argv)
   scene.addLight( light1 );
   scene.addLight( light2 );
 
-  if ( argc > 1 )
+  if ( vm.count( "input" ) )
     {
-      std::string  inputFilename = argv[ 1 ];
-      unsigned int threshold     = argc > 2 ? atoi( argv[ 2 ] ) : 1;
-      std::string  material      = argc > 3 ? argv[ 3 ] : "rPlastic";
+      string inputFilename = vm["input"].as<string>();
+      int thresholdMin     = vm["thresholdMin"].as<int>();
+      int thresholdMax     = vm["thresholdMax"].as<int>();
+      string estimator     = vm["estimator"].as<string>();
+      std::string  material      = "rPlastic";
       trace.beginBlock( "Reading vol file into an image." );
       typedef HyperRectDomain< Space3 >                 Domain;
       typedef ImageContainerBySTLVector< Domain, int >  Image;
       typedef ImageContainerBySTLVector< Domain, bool > BooleanImage;
-      typedef functors::SimpleThresholdForegroundPredicate<Image> ThresholdedImage;
+      typedef functors::IntervalForegroundPredicate<Image> ThresholdedImage;
       typedef GraphicalDigitalVolume< BooleanImage >    Volume;
       Image image = VolReader<Image>::importVol(inputFilename);
-      ThresholdedImage thresholdedImage( image, threshold );
+      ThresholdedImage thresholdedImage( image, thresholdMin, thresholdMax );
       trace.endBlock();
       trace.beginBlock( "Making binary image and building digital volume." );
       BooleanImage bimage( image.domain() );
       for ( auto p : bimage.domain() )
         bimage.setValue( p, thresholdedImage( p ) );
       Volume* vol = new Volume( bimage, string2material( material ) );
+      if ( estimator == "VCM" || estimator == "II" )
+        {
+          typedef KSpace3::SCellSet                SCellSet;
+          typedef SetOfSurfels<KSpace3, SCellSet>  SurfaceStorage;
+          typedef DigitalSurface< SurfaceStorage > Surface;
+          SCellSet boundary;
+          Surfaces<KSpace3>::sMakeBoundary( boundary, vol->space(), vol->image(), 
+                                            vol->space().lowerBound(), vol->space().upperBound() );
+          SurfaceStorage surface_storage( vol->space(), true, boundary );
+          Surface surface( surface_storage );
+          chooseKernel( vm, vol->space(), surface, vol->image(), vol->normals );
+        }
       scene.addObject( vol );
       trace.endBlock();
     }
 
   
   // shallowSand( scene, 1.0f );
-  groundWhiteAndBlack( scene, 0.0f );
+  groundWhiteAndBlack( scene, 0.0f, 20.0f );
   // groundBlackAndGrey( scene, Point3( 0, 0, 0 ) );
   // leftBuilding( scene, 10.0 );
   // water( scene, Point3( 0, 0, -2.0f ) );
 
   // Objects
-  Sphere* sphere0 = new Sphere( Point3( -600, 200, 800), 800.0, Material::emerald() );
+  // Sphere* sphere0 = new Sphere( Point3( -600, 200, 800), 800.0, Material::emerald() );
   Sphere* sphere1 = new Sphere( Point3( -20, 0, 40), 40.0, Material::bronze() );
   // Sphere* sphere2 = new Sphere( Point3( 0, 4, 0.5), 1.0, Material::emerald() );
   // Sphere* sphere3 = new Sphere( Point3( 6, 6, 0), 3.0, Material::whitePlastic() );
   // Sphere* sphere4 = new Sphere( Point3( 5, 0, 0), 3.0, Material::bronze() );
-  scene.addObject( sphere0 );
+  //scene.addObject( sphere0 );
   scene.addObject( sphere1 );
   // scene.addObject( sphere2 );
   // scene.addObject( sphere3 );

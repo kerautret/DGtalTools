@@ -36,9 +36,14 @@
 /** Prevents repeated inclusion of headers. */
 #define NormalEstimation_h
 
+#include <boost/program_options/options_description.hpp>
+#include <boost/program_options/parsers.hpp>
+#include <boost/program_options/variables_map.hpp>
+
 #include "DGtal/topology/KhalimskySpaceND.h"
 #include "DGtal/graph/DepthFirstVisitor.h"
 #include "DGtal/graph/GraphVisitorRange.h"
+#include "DGtal/images/SimpleThresholdForegroundPredicate.h"
 #include "DGtal/geometry/surfaces/estimation/CNormalVectorEstimator.h"
 #include "DGtal/geometry/surfaces/estimation/VoronoiCovarianceMeasureOnDigitalSurface.h"
 #include "DGtal/geometry/surfaces/estimation/VCMDigitalSurfaceLocalEstimator.h"
@@ -55,12 +60,15 @@ namespace DGtal {
     */
     template <typename KSpace,
               typename Surface,
-              typename Estimator>
+              typename Estimator, 
+              typename NormalMap>
     void computeEstimation
-    ( const po::variables_map& vm,     //< command-line parameters
+    ( const boost::program_options::variables_map& vm,     //< command-line parameters
       const KSpace& K,                 //< cellular grid space
       const Surface& surface,          //< digital surface approximating shape
-      Estimator& estimator )           //< an initialized estimator
+      Estimator& estimator,            //< an initialized estimator
+      NormalMap& n_estimations         //< a map for storing normal estimations
+      )
     {
       typedef typename Surface::Surfel Surfel;
       typedef typename Estimator::Quantity Quantity;
@@ -69,13 +77,26 @@ namespace DGtal {
       typedef GraphVisitorRange< Visitor > VisitorRange;
       typedef typename VisitorRange::ConstIterator VisitorConstIterator;
       
-      std::string fname = vm[ "output" ].as<std::string>();
       string nameEstimator = vm[ "estimator" ].as<string>();
-      trace.beginBlock( "Computing " + nameEstimator + "estimations." );
-      CountedPtr<VisitorRange> range( new VisitorRange( new Visitor( surface, *(surface.begin()) )) );
-      std::vector<Quantity> n_estimations;
-      estimator.eval( range->begin(), range->end(), std::back_inserter( n_estimations ) );
-      trace.info() << "- nb estimations  = " << n_estimations.size() << std::endl;
+      trace.beginBlock( "Computing " + nameEstimator + "estimations component per component." );
+      std::set<Surfel> M;
+      for ( Surfel surfel : surface )
+        {
+          if ( M.find( surfel ) == M.end() )
+            {
+              CountedPtr<VisitorRange> range( new VisitorRange( new Visitor( surface, surfel ) ) );
+              std::vector<Quantity> v_estimations;
+              estimator.eval( range->begin(), range->end(), std::back_inserter( v_estimations ) );
+              trace.info() << "- from " << surfel << ", nb estimations  = " << v_estimations.size() << std::endl;
+              CountedPtr<VisitorRange> range2( new VisitorRange( new Visitor( surface, surfel ) ) );
+              typename std::vector<Quantity>::iterator it = v_estimations.begin();
+              for ( Surfel s : *range2 ) 
+                {
+                  n_estimations[ surfel ] = *it++;
+                  M.insert( s );
+                }
+            }
+        }
       trace.endBlock();
             
       trace.beginBlock( "Correcting orientations." );
@@ -86,13 +107,16 @@ namespace DGtal {
     template <typename KSpace,
               typename Surface,
               typename KernelFunction,
-              typename PointPredicate>
+              typename PointPredicate,
+              typename NormalMap>
     void chooseEstimator
-    ( const po::variables_map& vm,     //< command-line parameters
+    ( const boost::program_options::variables_map& vm,     //< command-line parameters
       const KSpace& K,                 //< cellular grid space
-      const Surface& surface,     //< digital surface approximating shape
-      const KernelFunction& chi,  //< the kernel function
-      const PointPredicate& ptPred )   //< analysed implicit digital shape as a PointPredicate
+      const Surface& surface,          //< digital surface approximating shape
+      const KernelFunction& chi,       //< the kernel function
+      const PointPredicate& ptPred,    //< analysed implicit digital shape as a PointPredicate
+      NormalMap& n_estimations         //< a map for storing normal estimations
+      )
     {
       string nameEstimator = vm[ "estimator" ].as<string>();
       double h = vm["gridstep"].as<double>();
@@ -122,7 +146,7 @@ namespace DGtal {
           estimator.setParams( embType, R, r, chi, t, Metric(), true );
           estimator.init( h, surface.begin(), surface.end() );
           trace.endBlock();
-          computeEstimation( vm, K, surface, estimator );
+          computeEstimation( vm, K, surface, estimator, n_estimations );
         }
       else if ( nameEstimator == "II" )
         {
@@ -153,20 +177,22 @@ namespace DGtal {
           ii_estimator.init( h, surface.begin(), surface.end() );
           trace.endBlock();
           trace.endBlock();
-          computeEstimation( vm, K, surface, ii_estimator );
+          computeEstimation( vm, K, surface, ii_estimator, n_estimations );
         }
 
     }
 
     template <typename KSpace,
-              typename ImplicitShape,
               typename Surface,
-              typename PointPredicate>
+              typename PointPredicate,
+              typename NormalMap >
     void chooseKernel
-    ( const po::variables_map& vm,     //< command-line parameters
+    ( const boost::program_options::variables_map& vm,     //< command-line parameters
       const KSpace& K,                 //< cellular grid space
       const Surface& surface,          //< digital surface approximating shape
-      const PointPredicate& ptPred )   //< analysed implicit digital shape as a PointPredicate
+      const PointPredicate& ptPred,    //< analysed implicit digital shape as a PointPredicate
+      NormalMap& n_estimations         //< a map for storing normal estimations
+      )
     {
       string kernel = vm[ "kernel" ].as<string>();
       double h = vm["gridstep"].as<double>();
@@ -177,12 +203,12 @@ namespace DGtal {
         typedef typename KSpace::Point Point;
         typedef functors::HatPointFunction<Point,double> KernelFunction;
         KernelFunction chi_r( 1.0, r );
-        chooseEstimator( vm, K, surface, chi_r, ptPred );
+        chooseEstimator( vm, K, surface, chi_r, ptPred, n_estimations );
       } else if ( kernel == "ball" ) {
         typedef typename KSpace::Point Point;
         typedef functors::BallConstantPointFunction<Point,double> KernelFunction;
         KernelFunction chi_r( 1.0, r );
-        chooseEstimator( vm, K, surface, chi_r, ptPred );
+        chooseEstimator( vm, K, surface, chi_r, ptPred, n_estimations );
       }
     }
 

@@ -36,6 +36,7 @@
 /** Prevents repeated inclusion of headers. */
 #define DigitalVolume_h
 
+#include <map>
 #include "DGtal/base/Clone.h"
 #include "raytracer/GeometricalObject.h"
 #include "raytracer/Parallelogram.h"
@@ -48,9 +49,11 @@ namespace DGtal {
     template <typename TBooleanImage>
     struct DigitalVolume : public virtual GeometricalObject {
 
-      typedef TBooleanImage  BooleanImage;
-      typedef KSpace3::SCell SCell;
-      typedef KSpace3::Cell  Cell;
+      typedef TBooleanImage           BooleanImage;
+      typedef KSpace3                 KSpace;
+      typedef KSpace3::SCell          SCell;
+      typedef KSpace3::Cell           Cell;
+      typedef std::map<SCell,Vector3> NormalMap;
       
       /// Creates a parallelogram of vertices \a a, \a b and \a c, and
       /// last vertex is computed as \f$ a + b-a + c-a \f$.
@@ -204,12 +207,14 @@ namespace DGtal {
         Point3    B  = A; B[ i ] += 1.0 + 2.0*RT_BANDWIDTH;
         Point3    C  = A; C[ j ] += 1.0 + 2.0*RT_BANDWIDTH;
         Point3    N = (B-A).crossProduct(C-A);
+        if ( normals.find( surfel ) == normals.end() )
+          normals[ surfel ] = N;
         last_square = ( ( N[ k ] > 0.0 ) == ext_dir )
           ? Parallelogram( A, B, C ) : Parallelogram( A, C, B );
         last_surfel = surfel;
         d           = last_square.rayIntersection( ray, p );
         last_p      = p;
-        last_n      = last_square.getNormal( p );
+        last_n      = normals[ surfel ];  //last_square.getNormal( p );
         return -1.0; // d
       }
         
@@ -219,6 +224,8 @@ namespace DGtal {
       KSpace3       K;
       /// Sides of the bounding box of the digital volume.
       std::vector<Parallelogram> sides;
+      /// Map surfel -> normal vector
+      NormalMap     normals;
 
       /// Last point of intersection
       Point3        last_p;
