@@ -56,19 +56,35 @@ DGtal::rt::PeriodicPlane::coordinates( Point3 p, Real& x, Real& y )
   y = pp.dot( e1 ) / e1.dot( e1 );
 }
 
-DGtal::rt::Real
-DGtal::rt::PeriodicPlane::rayIntersection( const Ray& ray, Point3& p )
+bool 
+DGtal::rt::PeriodicPlane::intersectRay( RayIntersection& ray_inter )
 {
-  Real cos_a = ray.direction.dot( n );
-  Real dist  = n.dot( ray.origin - center );
-  if ( fabs( cos_a ) < 0.00001 ) // vector is tangent
+  const Ray& ray = ray_inter.ray;
+  Real cos_a     = ray.direction.dot( n );
+  Real dist      = n.dot( ray.origin - center );
+  if ( fabs( cos_a ) < RT_EPSILON ) // vector is tangent
     {
-      p = ray.origin;
-      return fabs( dist );
+      ray_inter.distance     = fabs( dist );
+      ray_inter.intersection = ray.origin;
+      ray_inter.normal       = n;
+      ray_inter.reflexion    = ray_inter.intersection;
+      ray_inter.refraction   = ray_inter.intersection;
+      return false;
     }
   Real gamma = - dist/ cos_a;
   if ( gamma < 0.00001 ) // ray is going away from the plane.
-    return fabs( dist );
-  p = ray.origin + gamma * ray.direction;
-  return -1.0;
+    {
+      ray_inter.distance     = fabs( dist );
+      ray_inter.intersection = ray.origin;
+      ray_inter.normal       = n;
+      ray_inter.reflexion    = ray_inter.intersection;
+      ray_inter.refraction   = ray_inter.intersection;
+      return false;
+    }
+  ray_inter.distance     = -fabs( cos_a );
+  ray_inter.intersection = ray.origin + gamma * ray.direction;
+  ray_inter.normal       = n;
+  ray_inter.reflexion    = ray_inter.intersection;
+  ray_inter.refraction   = ray_inter.intersection;
+  return true;
 }

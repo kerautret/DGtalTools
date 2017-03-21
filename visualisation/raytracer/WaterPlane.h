@@ -132,13 +132,20 @@ namespace DGtal {
       /// @return the material associated to this part of the object
       virtual Material getMaterial( Point3 p );
 
-      /// @param[in] ray the incoming ray
-      /// @param[out] returns the point of intersection with the object
-      /// (if any), or the closest point to it.
+      // /// @param[in] ray the incoming ray
+      // /// @param[out] returns the point of intersection with the object
+      // /// (if any), or the closest point to it.
+      // ///
+      // /// @return either a real < 0.0 if there is an intersection, or a
+      // /// kind of distance to the closest point of intersection.
+      // virtual Real rayIntersection( const Ray& ray, Point3& p );
+
+      /// @param[in,out] ray_inter as input the incoming ray, as
+      /// output information abour intersection.
       ///
-      /// @return either a real < 0.0 if there is an intersection, or a
-      /// kind of distance to the closest point of intersection.
-      virtual Real rayIntersection( const Ray& ray, Point3& p );
+      /// @return true if there was an intersection, false otherwise
+      /// (more information is stored in ray_inter)
+      virtual bool intersectRay( RayIntersection& ray_inter );
     };
 
   } // namespace rt

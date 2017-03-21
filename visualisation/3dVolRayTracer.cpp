@@ -89,7 +89,7 @@ void groundWhiteAndBlack( Scene& scene, Real depth, Real size = 5.0 )
 {
   GraphicalPeriodicPlane* pplane =
     new GraphicalPeriodicPlane( Point3( 0, 0, -depth ), Vector3( size, 0, 0 ), Vector3( 0, size, 0 ),
-                       Material::whitePlastic(), Material::blackMatter(), 0.05*size );
+                       Material::whitePlastic(), Material::blackMatter(), 0.05 );
   scene.addObject( pplane );
 }
 void shallowSand( Scene& scene, Real depth )
@@ -199,6 +199,7 @@ int main( int argc, char** argv )
   general_opt.add_options()
     ("help,h", "display this message")
     ("input,i", po::value<std::string>(), "vol file (.vol) , pgm3d (.p3d or .pgm3d, pgm (with 3 dims)) file or sdp (sequence of discrete points)" )
+    ("material,w", po::value<std::string>()->default_value( "rPlastic" ), "the material chosen for the volume." )
     ("thresholdMin,m",  po::value<int>()->default_value(0), "threshold min (excluded) to define binary shape" )
     ("thresholdMax,M",  po::value<int>()->default_value(255), "threshold max (included) to define binary shape" )
     ("gridstep,g", po::value< double >()->default_value( 1.0 ), "the gridstep that defines the digitization (often called h). " )
@@ -209,6 +210,10 @@ int main( int argc, char** argv )
     ("alpha", po::value<double>()->default_value( 0.0 ), "the parameter alpha in r(h)=r h^alpha (VCM)." )
     ("trivial-radius,t", po::value<double>()->default_value( 3 ), "the parameter t defining the radius for the Trivial estimator. Also used for reorienting the VCM." )
     ("embedding,E", po::value<int>()->default_value( 0 ), "the surfel -> point embedding for VCM estimator: 0: Pointels, 1: InnerSpel, 2: OuterSpel." )
+    ("scale,s", po::value<double>()->default_value( 1.0 ), "the scale for the ground.")
+    ("lights,l", po::value<int>()->default_value( 1 ), "the number of additional lights.")
+    ("display,d", po::value<int>()->default_value( 0 ), "the display mode, obtained by sumation: flat shading(0)/Phong shading(1), digital geometry(0)/shifted geometry(2)")
+    ("positions,p", po::value<int>()->default_value( 0 ), "the number of iterations for interpolating positions.")
     ;
   bool parseOK=true;
   po::variables_map vm;
@@ -232,17 +237,20 @@ int main( int argc, char** argv )
   
   // Creates a 3D scene
   Scene scene;
-  
+
+  // Get scene parameters
+  int nb_lights   = vm["lights"].as<int>();
+  double scale    = vm["scale"].as<double>();
   // Light at infinity
-  Light* light0   = new PointLight( GL_LIGHT0, Vector4( 0, 0, 1, 0),
-                                    RealColor( 1.0, 1.0, 1.0 ) );
-  Light* light1   = new PointLight( GL_LIGHT1, Vector4( -50,-50,50,1),
-                                    RealColor( 0.8, 0.8, 0.8 ) );
-  Light* light2   = new PointLight( GL_LIGHT2, Vector4( -50,-50,40,1),
-                                    RealColor( 0.7, 0.7, 0.7 ) );
-  scene.addLight( light0 );
-  scene.addLight( light1 );
-  scene.addLight( light2 );
+  scene.addLight( new PointLight( GL_LIGHT0, Vector4( 0, 0, 1, 0),
+                                  RealColor( 1.0, 1.0, 1.0 ) ) );
+  
+  if ( nb_lights > 0 )
+    scene.addLight( new PointLight( GL_LIGHT1, Vector4( 0,0,10,1),
+                                    RealColor( 0.8, 0.8, 0.8 ) ) );
+  if ( nb_lights > 1 )
+    scene.addLight( new PointLight( GL_LIGHT2, Vector4( 0,0,10,1),
+                                    RealColor( 0.7, 0.7, 0.7 ) ) );
 
   if ( vm.count( "input" ) )
     {
@@ -250,7 +258,9 @@ int main( int argc, char** argv )
       int thresholdMin     = vm["thresholdMin"].as<int>();
       int thresholdMax     = vm["thresholdMax"].as<int>();
       string estimator     = vm["estimator"].as<string>();
-      std::string  material      = "rPlastic";
+      std::string  material= vm["material"].as<string>();
+      int     displayMode  = vm["display"].as<int>();
+      int     nbIterations = vm["positions"].as<int>();
       trace.beginBlock( "Reading vol file into an image." );
       typedef HyperRectDomain< Space3 >                 Domain;
       typedef ImageContainerBySTLVector< Domain, int >  Image;
@@ -265,33 +275,54 @@ int main( int argc, char** argv )
       for ( auto p : bimage.domain() )
         bimage.setValue( p, thresholdedImage( p ) );
       Volume* vol = new Volume( bimage, string2material( material ) );
+      // typedef KSpace3::SCellSet                SCellSet;
+      // typedef SetOfSurfels<KSpace3, SCellSet>  SurfaceStorage;
+      // typedef DigitalSurface< SurfaceStorage > Surface;
+      // SCellSet boundary;
+      // Surfaces<KSpace3>::sMakeBoundary( boundary, vol->space(), vol->image(), 
+      //                                   vol->space().lowerBound(), vol->space().upperBound() );
+      // SurfaceStorage surface_storage( vol->space(), true, boundary );
+      // Surface surface( surface_storage );
       if ( estimator == "VCM" || estimator == "II" )
         {
-          typedef KSpace3::SCellSet                SCellSet;
-          typedef SetOfSurfels<KSpace3, SCellSet>  SurfaceStorage;
-          typedef DigitalSurface< SurfaceStorage > Surface;
-          SCellSet boundary;
-          Surfaces<KSpace3>::sMakeBoundary( boundary, vol->space(), vol->image(), 
-                                            vol->space().lowerBound(), vol->space().upperBound() );
-          SurfaceStorage surface_storage( vol->space(), true, boundary );
-          Surface surface( surface_storage );
-          chooseKernel( vm, vol->space(), surface, vol->image(), vol->normals );
+          chooseKernel( vm, vol->space(), vol->surface(), vol->image(), vol->normals );
+          trace.beginBlock( "Interpolating normals vector field." );
+          vol->interpolateVectorField( vol->normals, true );
+          trace.endBlock();
         }
+      trace.beginBlock( "Interpolating positions." );
+      vol->computePositions( nbIterations );
+      trace.endBlock();
+      vol->setMode( vol->interpolatedEstimatedNormals, // estimated normals if specified
+                    displayMode & 1, // Phong or flat shading
+                    displayMode & 2  // Shifted or digital surface
+                    );
+      // else
+      //   {
+      //     trace.beginBlock( "Computing Trivial normals." );
+      //     for ( auto surfel : vol->surface() )
+      //       vol->normals[ surfel ] = vol->trivialNormal( surfel );
+      //     trace.endBlock();
+      //   }
+      // Force interpolation of vector field
+      trace.info() << "- Volume has interpolated normal: "
+                   << ( vol->interpolatedEstimatedNormals ? "Yes" : "No" ) << std::endl;
       scene.addObject( vol );
       trace.endBlock();
     }
 
   
   // shallowSand( scene, 1.0f );
-  groundWhiteAndBlack( scene, 0.0f, 20.0f );
+  
+  groundWhiteAndBlack( scene, 0.0f, 40.0f*scale );
   // groundBlackAndGrey( scene, Point3( 0, 0, 0 ) );
   // leftBuilding( scene, 10.0 );
-  // water( scene, Point3( 0, 0, -2.0f ) );
+  // water( scene, Point3( 0, 0, 8.0f ) );
 
   // Objects
   // Sphere* sphere0 = new Sphere( Point3( -600, 200, 800), 800.0, Material::emerald() );
-  Sphere* sphere1 = new Sphere( Point3( -20, 0, 40), 40.0, Material::bronze() );
-  // Sphere* sphere2 = new Sphere( Point3( 0, 4, 0.5), 1.0, Material::emerald() );
+  Sphere* sphere1 = new Sphere( Point3( -40.0*scale, 0, 40.0*scale), 40.0*scale, Material::mirror() );
+  // Sphere* sphere2 = new Sphere( Point3( 0, 4, 0.5), 10.0*scale, Material::glass() );
   // Sphere* sphere3 = new Sphere( Point3( 6, 6, 0), 3.0, Material::whitePlastic() );
   // Sphere* sphere4 = new Sphere( Point3( 5, 0, 0), 3.0, Material::bronze() );
   //scene.addObject( sphere0 );
@@ -299,7 +330,7 @@ int main( int argc, char** argv )
   // scene.addObject( sphere2 );
   // scene.addObject( sphere3 );
   // scene.addObject( sphere4 );
-  // cube( scene, Point3( -5, -5, -1 ), 6.0f, Material::ruby(), Material::blackMatter(), 0.025f );
+  // cube( scene, Point3( 10, -10, -1 ), 6.0f, Material::ruby(), Material::blackMatter(), 0.025f );
   // cube( scene, Point3( -5, -5, -1 ), 5.0f, Material::mirror(), Material::mirror(), 0.00f );
   // pyramid( scene, Point3( -5, -5, -1 ), 6.0f, Material::ruby(), Material::blackMatter(), 0.025f );
   // pyramid( scene, Point3( -5, -5, -1 ), 5.0f, Material::mirror(), Material::mirror(), 0.00f );

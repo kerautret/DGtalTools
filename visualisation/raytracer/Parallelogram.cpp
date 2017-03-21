@@ -44,22 +44,40 @@ DGtal::rt::Parallelogram::coordinates( Point3 p, Real& x, Real& y )
   y = cp.dot( V ) / ( C - A ).dot( V );
 }
 
-DGtal::rt::Real
-DGtal::rt::Parallelogram::rayIntersection( const Ray& ray, Point3& p )
+bool
+DGtal::rt::Parallelogram::intersectRay( RayIntersection& ray_inter )
 {
-  Real cos_a = ray.direction.dot( N );
-  Real dist  = N.dot( ray.origin - A );
-  if ( fabs( cos_a ) < 0.00001 ) // vector is tangent
+  const Ray& ray = ray_inter.ray;
+  Real cos_a     = ray.direction.dot( N );
+  Real dist      = N.dot( ray.origin - A );
+  if ( fabs( cos_a ) < RT_EPSILON ) // vector is tangent
     {
-      p = ray.origin;
-      return fabs( dist );
+      ray_inter.distance     = fabs( dist );
+      ray_inter.intersection = ray.origin;
+      ray_inter.normal       = N;
+      ray_inter.reflexion    = ray_inter.intersection;
+      ray_inter.refraction   = ray_inter.intersection;
+      return false;
     }
   Real gamma = - dist/ cos_a;
-  if ( gamma < 0.00001 ) // ray is going away from the plane.
-    return fabs( dist );
-  p = ray.origin + gamma * ray.direction;
+  if ( gamma < RT_EPSILON ) // ray is going away from the plane.
+    {
+      ray_inter.distance     = fabs( dist );
+      ray_inter.intersection = ray.origin;
+      ray_inter.normal       = N;
+      ray_inter.reflexion    = ray_inter.intersection;
+      ray_inter.refraction   = ray_inter.intersection;
+      return false;
+    }
   Real x, y;
+  Point3                 p = ray.origin + gamma * ray.direction;
+  ray_inter.intersection = p;
   coordinates( p, x, y );
-  return ( ( x >= 0.0f ) && ( y >= 0.0f ) && ( x <= 1.0f ) && ( y <= 1.0f ) )
+  ray_inter.distance     = ( ( x >= 0.0f ) && ( y >= 0.0f )
+                             && ( x <= 1.0f ) && ( y <= 1.0f ) )
     ? -1.0f : std::max( std::max( -x, x-1.0 ), std::max( -y, y-1.0 ) );
+  ray_inter.normal       = N;
+  ray_inter.reflexion    = ray_inter.intersection;
+  ray_inter.refraction   = ray_inter.intersection;
+  return ray_inter.distance < 0.0;
 }

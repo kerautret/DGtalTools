@@ -92,7 +92,10 @@ namespace DGtal {
               typename std::vector<Quantity>::iterator it = v_estimations.begin();
               for ( Surfel s : *range2 ) 
                 {
-                  n_estimations[ surfel ] = *it++;
+                  n_estimations[ s ] = *it++;
+                  // std::cout << "    - surfel=" << s
+                  //           << " normal=" << n_estimations[ s ]
+                  //           << std::endl;
                   M.insert( s );
                 }
             }

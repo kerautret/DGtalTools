@@ -69,6 +69,17 @@ namespace DGtal {
     typedef Vector3::Component  Real;
 
     
+    /// Calcule le vecteur réfléchi à V selon la direction N.
+    inline
+    Vector3 reflect( const Vector3& V, Vector3 N )
+    {
+      // V : light ray from eye
+      // V_reflect = V - 2 (N . V) N
+      Real n_dot_v = N.dot( V );
+      if ( n_dot_v > 0.0 ) { n_dot_v = -n_dot_v; N *= -1.0; }
+      return V - ( 2.0 * n_dot_v ) * N;
+    }
+
     
     /// This structure stores a ray having an origin and a direction. It
     /// also stores its depth.
@@ -79,13 +90,15 @@ namespace DGtal {
       Vector3 direction;
       /// depth of the ray, i.e. the number of times it can bounce on an object.
       int depth;
-      
+      /// refractive index of media
+      Real refractive_index;
+
       /// Default constructor
       Ray() {}
       
       /// Constructor from origin and vector. The vector may not be unitary.
-      Ray( const Point3& o, const Vector3& dir, int d = 1 )
-        : origin( o ), direction( dir ), depth( d )
+      Ray( const Point3& o, const Vector3& dir, int d = 1, Real index = 1.0 )
+        : origin( o ), direction( dir ), depth( d ), refractive_index( index )
       {
         Real l = direction.norm();
         if ( l != 1.0f ) direction /= l;

@@ -120,41 +120,48 @@ DGtal::rt::Sphere::getMaterial( Point3 /* p */ )
   return material; // the material is constant along the sphere.
 }
 
-DGtal::rt::Real
-DGtal::rt::Sphere::rayIntersection( const Ray& ray, Point3& p )
+bool
+DGtal::rt::Sphere::intersectRay( RayIntersection& ray_inter )
 {
   // Calcul de la distance d'intersection
-  Vector3 pa = center - ray.origin;
-  Real l_ppa = pa.dot( ray.direction );  // longueur du projete de pa sur dir
-  Real d2 = pa.dot( pa ) - l_ppa * l_ppa; // car |w|=1
-  Real r2 = radius * radius;
-  Real diff = d2 - r2;
+  const Ray& ray = ray_inter.ray;
+  Vector3    pa  = center - ray.origin;
+  Real     l_ppa = pa.dot( ray.direction );  // longueur du projete de pa sur dir
+  Real        d2 = pa.dot( pa ) - l_ppa * l_ppa; // car |w|=1
+  Real        r2 = radius * radius;
+  Real      diff = d2 - r2;
   if ( diff >= 0.0 )
     { // pas d'intersection. Point le plus proche = projection à
       // l'orthogonal de la droite et du centre de la sphere.
-      p = ray.origin + l_ppa * ray.direction;
-      return sqrt( diff );
+      ray_inter.distance     = sqrt( diff );
+      ray_inter.intersection = ray.origin + l_ppa * ray.direction; // closest point
+      ray_inter.reflexion    = ray_inter.intersection;
+      ray_inter.refraction   = ray_inter.intersection;
+      ray_inter.normal       = getNormal( ray_inter.intersection );
+      return false;
     }
-  else 
-    { // Intersection. On cherche ou:
-      // std::cout << "Intersection: diff=" << diff << std::endl;
-      Real delta_over_2 = sqrt( -diff );
-      Real gamma1 = l_ppa - delta_over_2;
-      Real gamma2 = l_ppa + delta_over_2;
-      if ( gamma2 < 0.0001 ) // ray starts after the object
-        { // no intersection
-          p = ray.origin + gamma2 * ray.direction;
-          return 100000.0f; //-gamma2;
-        }
-      else if ( gamma1 < 0.0001 ) // if ray is starting from inside or from this surface
-        {
-          p = ray.origin + gamma2 * ray.direction;
-          return -1.0f;
-        }
-      else // ray is coming from the outside
-        {
-          p = ray.origin + gamma1 * ray.direction;
-          return -1.0f;
-        }
+  // Intersection. On cherche ou:
+  // std::cout << "Intersection: diff=" << diff << std::endl;
+  Real delta_over_2 = sqrt( -diff );
+  Real gamma1 = l_ppa - delta_over_2;
+  Real gamma2 = l_ppa + delta_over_2;
+  if ( gamma2 < RT_EPSILON ) // ray starts after the object
+    { // no intersection
+      ray_inter.distance     = 100000.0f; 
+      ray_inter.intersection = ray.origin + gamma2 * ray.direction; // closest pt
+      ray_inter.reflexion    = ray_inter.intersection;
+      ray_inter.refraction   = ray_inter.intersection;
+      return false;
     }
+  if ( gamma1 < 0.0001 ) // if ray is starting from inside or from this surface
+    ray_inter.intersection = ray.origin + gamma2 * ray.direction;
+  else // ray is coming from the outside
+    ray_inter.intersection = ray.origin + gamma1 * ray.direction;
+  ray_inter.distance    = -1.0f;
+  ray_inter.normal      = getNormal( ray_inter.intersection );
+  ray_inter.reflexion   = ray_inter.intersection;
+  ray_inter.refraction  = ray_inter.intersection;
+  ray_inter.in_refractive_index  = material.in_refractive_index;
+  ray_inter.out_refractive_index = material.out_refractive_index;
+  return true;
 }

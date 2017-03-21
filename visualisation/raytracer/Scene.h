@@ -109,27 +109,52 @@ namespace DGtal {
       }
     
       /// returns the closest object intersected by the given ray.
-      Real
-      rayIntersection( const Ray& ray,
-                       GraphicalObject*& object, Point3& p )
+      // Real
+      // rayIntersection( const Ray& ray,
+      //                  GraphicalObject*& object, Point3& p )
+      // {
+      //   object = 0;
+      //   Real dist2 = 0.0;
+      //   Point3 tmp_p;
+      //   for ( GraphicalObject* obj : myObjects )
+      //     {
+      //       if ( obj->rayIntersection( ray, tmp_p ) < 0.0f )
+      //         {
+      //           Real new_dist2 = (tmp_p - ray.origin).norm();
+      //           if ( ( object == 0 ) || ( new_dist2 < dist2 ) )
+      //             {
+      //               object = obj;
+      //               p      = tmp_p;
+      //               dist2  = new_dist2;
+      //             }
+      //         }
+      //     }
+      //   return object != 0 ? -1.0f : 1.0f;
+      // }
+
+      /// returns the closest object intersected by the given ray.
+      bool
+      intersectRay( RayIntersection& ray_inter,
+                    GraphicalObject*& object )
       {
         object = 0;
         Real dist2 = 0.0;
-        Point3 tmp_p;
+        RayIntersection ray_inter_tmp( ray_inter );
         for ( GraphicalObject* obj : myObjects )
           {
-            if ( obj->rayIntersection( ray, tmp_p ) < 0.0f )
+            if ( obj->intersectRay( ray_inter_tmp ) )
               {
-                Real new_dist2 = (tmp_p - ray.origin).norm();
+                Real new_dist2 = (ray_inter_tmp.intersection
+                                  - ray_inter_tmp.ray.origin).norm();
                 if ( ( object == 0 ) || ( new_dist2 < dist2 ) )
                   {
-                    object = obj;
-                    p      = tmp_p;
-                    dist2  = new_dist2;
+                    object    = obj;
+                    ray_inter = ray_inter_tmp;
+                    dist2     = new_dist2;
                   }
               }
           }
-        return object != 0 ? -1.0f : 1.0f;
+        return object != 0;
       }
 
     private:
