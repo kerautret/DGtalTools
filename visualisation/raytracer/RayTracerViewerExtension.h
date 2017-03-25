@@ -95,6 +95,9 @@ namespace DGtal {
       {
         ptrScene = &aScene;
       }
+
+      /// Changes the rendering mode for digital volumes.
+      void setDigitalVolumeMode( bool estimatedNormals, bool Phong, bool smoothed );
     
       /// Called at each draw of the window
       virtual void draw( Viewer& viewer );

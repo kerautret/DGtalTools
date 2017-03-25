@@ -31,10 +31,36 @@
 #include "raytracer/Scene.h"
 #include "raytracer/Renderer.h"
 #include "raytracer/Background.h"
+#include "raytracer/DigitalVolume.h"
 #include "DGtal/images/ImageContainerBySTLVector.h"
 #include "DGtal/io/writers/PPMWriter.h"
 
 using namespace std;
+
+void 
+DGtal::rt::RayTracerViewerExtension::setDigitalVolumeMode
+( bool estimatedNormals, bool Phong, bool smoothed )
+{
+  typedef HyperRectDomain< Space3 >                 Domain;
+  typedef ImageContainerBySTLVector< Domain, bool > BooleanImage;
+  typedef DigitalVolume< BooleanImage >             Volume;
+  if ( ptrScene != 0 )
+    {
+      for ( GraphicalObject* obj : ptrScene->myObjects )
+        {
+          Volume* vol = dynamic_cast<Volume*>( obj );
+          if ( vol != 0 )
+            {
+              std::cout << "- Volume " << vol << ": setting mode "
+                        << (estimatedNormals ? "EstimatedNormals" : "TrivialNormals" )
+                        << "/" << ( Phong ? "PhongShading" : "FlatShading" )
+                        << "/" << ( smoothed ? "ShiftedGeometry" : "RawGeometry" )
+                        << std::endl;
+              vol->setMode( estimatedNormals, Phong, smoothed );
+            }
+        }
+    }
+}
 
 void 
 DGtal::rt::RayTracerViewerExtension::draw( Viewer& viewer ) 
@@ -52,7 +78,7 @@ void
 DGtal::rt::RayTracerViewerExtension::init( Viewer& viewer ) 
 {
   // Restore previous viewer state.
-  viewer.restoreStateFromFile();
+  // viewer.restoreStateFromFile();
   
   // Add custom key description (see keyPressEvent).
   viewer.setKeyDescription(Qt::Key_U, "Renders the scene with a ray-tracer (low resolution)");
@@ -60,6 +86,10 @@ DGtal::rt::RayTracerViewerExtension::init( Viewer& viewer )
   viewer.setKeyDescription(Qt::CTRL+Qt::Key_U, "Renders the scene with a ray-tracer (high resolution)");
   viewer.setKeyDescription(Qt::Key_V, "Augments the max depth of ray-tracing algorithm");
   viewer.setKeyDescription(Qt::SHIFT+Qt::Key_V, "Decreases the max depth of ray-tracing algorithm");
+  viewer.setKeyDescription(Qt::Key_1, "Chooses flat shading, digital geometry and trivial normals");
+  viewer.setKeyDescription(Qt::Key_2, "Chooses Phong shading, digital geometry and trivial normals");
+  viewer.setKeyDescription(Qt::Key_3, "Chooses flat shading, offset geometry and estimated normals");
+  viewer.setKeyDescription(Qt::Key_4, "Chooses Phong shading, offset geometry and estimated normals");
   
   // Opens help window
   // help();
@@ -115,6 +145,14 @@ DGtal::rt::RayTracerViewerExtension::keyPressEvent( Viewer& viewer, QKeyEvent *e
         { maxDepth = std::min( 20, maxDepth + 1 ); handled = true; }
       std::cout << "Max depth is " << maxDepth << std::endl; 
     }
+  if (e->key()==Qt::Key_1)
+    { setDigitalVolumeMode( false, false, false ); handled = true; }
+  if (e->key()==Qt::Key_2)
+    { setDigitalVolumeMode( false, true,  false ); handled = true; }
+  if (e->key()==Qt::Key_3)
+    { setDigitalVolumeMode( true,  false, true  ); handled = true; }
+  if (e->key()==Qt::Key_4)
+    { setDigitalVolumeMode( true,  true,  true  ); handled = true; }
   return handled;
 }
 
@@ -126,5 +164,6 @@ DGtal::rt::RayTracerViewerExtension::helpString( const Viewer& viewer )  const
   text += "Press <b>Shift+U</b> to render the scene (medium resolution).";
   text += "Press <b>Ctrl+U</b> to render the scene (high resolution).";
   text += "Press <b>V</b> and <b>Shift+V</b> to change the maximal depth of raytracing.";
+  text += "Press <b>1</b>, <b>2</b>, <b>3</b>, or <b>4</b> to change rendering mode of digital volumes.";
   return text;
 }
