@@ -172,17 +172,21 @@ namespace DGtal {
         // p_intersect = p[ j ];
         // last_n = sides[ j ].getNormal( p_intersect );
         // return -1.0;
-        
+
+        // (0) Checks if origin is in the volume
+        Point3i origin ( (Integer) round( ray.origin[ 0 ] ),
+                         (Integer) round( ray.origin[ 1 ] ),
+                         (Integer) round( ray.origin[ 2 ] ) );
+        bool origin_in = bimage.domain().isInside( origin );
+        Point3  q      = origin_in ? ray.origin : p[ j ];
         // Now casts the ray in the volume
         // (1) build a digital ray
-        Ray ray2( p[ j ], ray.direction, ray.depth );
+        Ray ray2( q, ray.direction, ray.depth ); //p[ j ]
         StandardDSL3d D( ray2,
                          RT_PRECISION*( K.upperBound() - K.lowerBound() ).norm1() );
         // (2) sort points along ray
-        // Point3  delta  = ray.direction / ray.direction.normInfinity();
-        Point3i origin = D.getPoint( ray.origin + RT_BANDWIDTH * ray.direction );  // 0.5*delta );
-        Point3i first  = bimage.domain().isInside( origin )
-          ? origin : D.getPoint( p[ j ] );
+        // Point3i origin = D.getPoint( ray.origin + RT_BANDWIDTH * ray.direction );  // 0.5*delta );
+        Point3i first  = origin_in ? origin : D.getPoint( p[ j ] );
         bool prev_state = bimage.domain().isInside( first )
           ? bimage( first ) != 0 : false;
         StandardDSL3d::ConstIterator it  = D.begin( first );

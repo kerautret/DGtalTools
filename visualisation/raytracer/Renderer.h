@@ -116,7 +116,7 @@ namespace DGtal {
                 Real    tx   = (Real) x / (Real)(myWidth-1);
                 Vector3 dir  = (1.0 - tx) * dirL + tx * dirR;
                 Ray eye_ray  = Ray( myOrigin, dir, max_depth );
-                RealColor result = trace( eye_ray );
+                RealColor result = traceWithAccumulation( eye_ray, 1.0 );
                 result.clamp();
                 image.setValue( Point2i( x, y ), result );
               }
@@ -226,6 +226,49 @@ namespace DGtal {
         result += ( ( ray.depth > 0 ) ? m.coef_diffusion : 1.0 )
           * illumination( ray, m, N, ray_inter.intersection );
         return result + m.ambient;
+      }
+
+      /// The rendering routine for one ray.
+      /// @return the color for the given ray.
+      RealColor traceWithAccumulation( const Ray& ray, Real accumulation )
+      {
+        assert( ptrScene != 0 );
+        RealColor result = RealColor( 0.0, 0.0, 0.0 );
+        if ( accumulation < 0.003 ) return result;
+        GraphicalObject* obj_i = 0; // pointer to intersected object
+        RayIntersection  ray_inter( ray );
+        ray_inter.ray.origin += RT_EPSILON * ray_inter.ray.direction;
+        // Look for intersection in this direction.
+        bool intersection = ptrScene->intersectRay( ray_inter, obj_i );
+        // Nothing was intersected: should be some background color
+        if ( ! intersection  ) return accumulation * background( ray );
+        Material m = obj_i->getMaterial( ray_inter.intersection );
+        Vector3  N = ray_inter.normal; // obj_i->getNormal  ( p_i );
+        bool out2in = N.dot( ray_inter.ray.direction ) <= 0.0;
+        ray_inter.in_refractive_index =
+          out2in ? m.in_refractive_index : m.out_refractive_index;
+        ray_inter.out_refractive_index =
+          out2in ? m.out_refractive_index : m.in_refractive_index;
+        if ( ( ray.depth > 0 ) && ( m.coef_reflexion > 0.0 ) )
+          {
+            // RealColor C_refl = trace( reflexionRay( ray, p_i, N ) );
+            RealColor C_refl =
+              traceWithAccumulation( ray_inter.reflexionRay(),
+                                     accumulation * m.coef_reflexion );
+            result      += ( C_refl * m.specular );
+          }
+        if ( ( ray.depth > 0 ) && ( m.coef_refraction > 0.0 ) )
+          {
+            // RealColor C_refr = trace( refractionRay( ray, p_i, N, m ) );
+            // JOL: TODO, set refractive indices in ray_inter
+            RealColor C_refr =
+              traceWithAccumulation( ray_inter.refractionRay(),
+                                     accumulation * m.coef_refraction );
+            result      += ( C_refr * m.diffuse );
+          }
+        result += accumulation * ( ( ray.depth > 0 ) ? m.coef_diffusion : 1.0 )
+          * ( illumination( ray, m, N, ray_inter.intersection ) + m.ambient);
+        return result;
       }
 
       /// The rendering routine for one ray.
