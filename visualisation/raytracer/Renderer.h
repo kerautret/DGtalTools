@@ -94,6 +94,9 @@ namespace DGtal {
 
       void setBackground( Background* ptr ) { ptrBackground = ptr; }
 
+      /// @return a random real number between 0 and 1.
+      static Real rand01() { return (Real) ((double) random() / (double) RAND_MAX); }
+
       /// The main rendering routine
       template <typename Image2D>
       void render( Image2D& image, int max_depth )
@@ -120,7 +123,72 @@ namespace DGtal {
           }
         std::cout << "Done." << std::endl;
       }
-
+      
+      /// The main rendering routine
+      template <typename Image2D>
+      void renderRandom( Image2D& image, int max_depth, int nb_samples, int nb_casts )
+      {
+        std::cout << "Random rendering into image ... might take a while." << std::endl;
+        setResolution( image.extent()[ 0 ], image.extent()[ 1 ] );
+        int nb_ray = 0;
+        for ( int y = 0; y < myHeight; ++y ) 
+          {
+            Real ty_up = (((Real) y)-0.5f) / (Real)(myHeight);
+            Real ty_lo = (((Real) y)+0.5f) / (Real)(myHeight);
+            DGtal::trace.progressBar( ty_up, 1.0 );
+            Vector3 dirL_up = (1.0f - ty_up) * myDirUL + ty_up * myDirLL;
+            Vector3 dirR_up = (1.0f - ty_up) * myDirUR + ty_up * myDirLR;
+            Vector3 dirL_lo = (1.0f - ty_lo) * myDirUL + ty_lo * myDirLL;
+            Vector3 dirR_lo = (1.0f - ty_lo) * myDirUR + ty_lo * myDirLR;
+            dirL_up /= dirL_up.norm();
+            dirR_up /= dirR_up.norm();
+            dirL_lo /= dirL_lo.norm();
+            dirR_lo /= dirR_lo.norm();
+            for ( int x = 0; x < myWidth; ++x ) 
+              {
+                Real tx_lt = (((Real) x)-0.5f) / (Real)(myWidth);
+                Real tx_rt = (((Real) x)+0.5f) / (Real)(myWidth);
+                Vector3 dir_ul = (1.0f - tx_lt) * dirL_up + tx_lt * dirR_up;
+                Vector3 dir_ur = (1.0f - tx_rt) * dirL_up + tx_rt * dirR_up;
+                Vector3 dir_ll = (1.0f - tx_lt) * dirL_lo + tx_lt * dirR_lo;
+                Vector3 dir_lr = (1.0f - tx_rt) * dirL_lo + tx_rt * dirR_lo;
+                dir_ul /= dir_ul.norm();
+                dir_ur /= dir_ur.norm();
+                dir_ll /= dir_ll.norm();
+                dir_lr /= dir_lr.norm();
+                RealColor total_color = RealColor( 0.0, 0.0, 0.0 );
+                int k = 0;
+                const int max_k = nb_samples*nb_casts;
+                while ( k < max_k )
+                  {
+                    Real rx = rand01();
+                    Real ry = rand01();
+                    Vector3 dir = (1.0f - rx ) * (1.0f - ry ) * dir_ul
+                      + rx * (1.0f - ry ) * dir_ur
+                      + (1.0f - rx) * ry * dir_ll + rx * ry * dir_lr;
+                    dir /= dir.norm();
+                    Ray eye_ray( myOrigin, dir, max_depth );
+                    for ( int l = 0; l < nb_casts; ++l )
+                      {
+                        RealColor result = randomTrace( eye_ray );
+                        total_color += result;
+                        nb_ray++;
+                        k++;
+                      }
+                    /* Real diff = distance( result, total_color * (1.0f / (Real) k ) ); */
+                    /* if ( ( k > 2 ) && ( diff < ( 0.005f * (Real) k ) ) ) break; */
+                  }
+                total_color = total_color * (1.0f / (Real) k );
+                total_color.clamp();
+                image.setValue( Point2i( x, y ), total_color );
+              }
+          }
+        std::cout << "Done." << std::endl
+                  << "Nb rays casted = " << nb_ray
+                  << " Avg rays/pixel = "
+                  << ( (double) nb_ray / (double) (myWidth*myHeight) ) << std::endl;
+      }
+      
 
       /// The rendering routine for one ray.
       /// @return the color for the given ray.
@@ -157,7 +225,50 @@ namespace DGtal {
           }
         result += ( ( ray.depth > 0 ) ? m.coef_diffusion : 1.0 )
           * illumination( ray, m, N, ray_inter.intersection );
-        return result;
+        return result + m.ambient;
+      }
+
+      /// The rendering routine for one ray.
+      /// @return the color for the given ray.
+      RealColor randomTrace( const Ray& ray )
+      {
+        assert( ptrScene != 0 );
+        RealColor result = RealColor( 0.0, 0.0, 0.0 );
+        GraphicalObject* obj_i = 0; // pointer to intersected object
+        RayIntersection  ray_inter( ray );
+        ray_inter.ray.origin += RT_EPSILON * ray_inter.ray.direction;
+        // Look for intersection in this direction.
+        bool intersection = ptrScene->intersectRay( ray_inter, obj_i );
+        // Nothing was intersected: should be some background color
+        if ( ! intersection  ) return background( ray );
+
+        // Compute material and normal at intersection.
+        Material m = obj_i->getMaterial( ray_inter.intersection );
+        Vector3  N = ray_inter.normal; // obj_i->getNormal  ( p_i );
+        bool out2in = N.dot( ray_inter.ray.direction ) <= 0.0;
+        ray_inter.in_refractive_index =
+          out2in ? m.in_refractive_index : m.out_refractive_index;
+        ray_inter.out_refractive_index =
+          out2in ? m.out_refractive_index : m.in_refractive_index;
+
+        // This random number tells whether we compute
+        // diffusion, reflexion or refraction
+        Real     c = m.coef_diffusion + m.coef_reflexion + m.coef_refraction;
+        Real     p = ray.depth > 0 ? rand01()*c : 0.0f;
+        if ( p <= m.coef_diffusion )
+          { // Diffusion + ambient
+            return m.ambient + c*illumination( ray, m, N, ray_inter.intersection );
+          }
+        else if ( p <= m.coef_diffusion + m.coef_reflexion )
+          { // réflexion
+            RealColor C_refl = randomTrace( ray_inter.reflexionRay() );
+            return (c*C_refl) * m.specular;
+          }
+        else 
+          { // réfraction
+            RealColor C_refr = randomTrace( ray_inter.refractionRay() );
+            return (c*C_refr) * m.diffuse;
+          }
       }
 
       Ray reflexionRay( const Ray& aRay, const Point3& p, const Vector3& n )

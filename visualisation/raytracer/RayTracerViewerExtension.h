@@ -73,12 +73,14 @@ namespace DGtal {
 
     public:
       /// Default constructor. Scene is empty.
-      RayTracerViewerExtension() : ptrScene( 0 ), maxDepth( 6 ) {}
+      RayTracerViewerExtension() : ptrScene( 0 ), maxDepth( 6 ),
+                                   nbSamples( 10 ), nbCasts( 5 ) {}
 
       /// Constructor with scene and depth.
       RayTracerViewerExtension( DGtal::rt::Scene& aScene,
                                 int depth = 6 )
-        : ptrScene( &aScene ), maxDepth( depth ) {}
+        : ptrScene( &aScene ), maxDepth( depth ),
+          nbSamples( 10 ), nbCasts( 5 ) {}
       
 
       static Point3 toPoint3( const qglviewer::Vec& v )
@@ -116,6 +118,11 @@ namespace DGtal {
 
       /// Maximum depth
       int maxDepth;
+
+      /// Number of random samples per pixel
+      int nbSamples;
+      /// Number of cast per random sample
+      int nbCasts;
     };
   }
 }

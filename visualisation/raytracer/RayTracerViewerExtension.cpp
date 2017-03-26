@@ -82,14 +82,18 @@ DGtal::rt::RayTracerViewerExtension::init( Viewer& viewer )
   
   // Add custom key description (see keyPressEvent).
   viewer.setKeyDescription(Qt::Key_U, "Renders the scene with a ray-tracer (low resolution)");
-  viewer.setKeyDescription(Qt::SHIFT+Qt::Key_U, "Renders the scene with a ray-tracer (medium resolution)");
-  viewer.setKeyDescription(Qt::CTRL+Qt::Key_U, "Renders the scene with a ray-tracer (high resolution)");
+  viewer.setKeyDescription(Qt::SHIFT+Qt::Key_U, "Renders the scene with standard ray-tracer (high resolution)");
+  viewer.setKeyDescription(Qt::CTRL+Qt::Key_U, "Renders the scene with a random ray-tracer (high resolution)");
   viewer.setKeyDescription(Qt::Key_V, "Augments the max depth of ray-tracing algorithm");
   viewer.setKeyDescription(Qt::SHIFT+Qt::Key_V, "Decreases the max depth of ray-tracing algorithm");
   viewer.setKeyDescription(Qt::Key_1, "Chooses flat shading, digital geometry and trivial normals");
   viewer.setKeyDescription(Qt::Key_2, "Chooses Phong shading, digital geometry and trivial normals");
   viewer.setKeyDescription(Qt::Key_3, "Chooses flat shading, offset geometry and estimated normals");
   viewer.setKeyDescription(Qt::Key_4, "Chooses Phong shading, offset geometry and estimated normals");
+  viewer.setKeyDescription(Qt::Key_9, "Increases the number of random samples per pixel (random rendering)");
+  viewer.setKeyDescription(Qt::CTRL+Qt::Key_9, "Decreases the number of random samples per pixel (random rendering)");
+  viewer.setKeyDescription(Qt::Key_9, "Increases the number of ray-casts per random sample (random rendering)");
+  viewer.setKeyDescription(Qt::CTRL+Qt::Key_9, "Decreases the number of ray-casts per random sample (random rendering)");
   
   // Opens help window
   // help();
@@ -125,14 +129,16 @@ DGtal::rt::RayTracerViewerExtension::keyPressEvent( Viewer& viewer, QKeyEvent *e
       viewer.camera()->convertClickToLine( QPoint( w, h ), orig, dir );
       Vector3 dirLR( toPoint3( dir ) );
       renderer.setViewBox( origin, dirUL, dirUR, dirLL, dirLR );
-      if ( modifiers == Qt::ShiftModifier ) { w /= 2; h /= 2; }
-      else if ( modifiers == Qt::NoModifier ) { w /= 8; h /= 8; }
+      if ( modifiers == Qt::NoModifier ) { w /= 4; h /= 4; }
       DuskWithChessboard bg;
       renderer.setBackground( &bg ); 
       Domain2D domain( Point2i( 0, 0 ) , Point2i( w, h ) );
       Image2D  image ( domain );
       renderer.setResolution( w, h );
-      renderer.render( image, maxDepth );
+      if ( modifiers == Qt::ShiftModifier ) 
+        renderer.render( image, maxDepth );
+      else
+        renderer.renderRandom( image, maxDepth, nbSamples, nbCasts );
       PPMWriter<Image2D,RealColor2Color>::exportPPM( "output.ppm", image,
                                                      RealColor2Color(), false );
       handled = true;
@@ -153,6 +159,18 @@ DGtal::rt::RayTracerViewerExtension::keyPressEvent( Viewer& viewer, QKeyEvent *e
     { setDigitalVolumeMode( true,  false, true  ); handled = true; }
   if (e->key()==Qt::Key_4)
     { setDigitalVolumeMode( true,  true,  true  ); handled = true; }
+  if (e->key()==Qt::Key_9 || e->key()==Qt::Key_0)
+    {
+      if (e->key()==Qt::Key_9)
+        nbSamples = ( modifiers != Qt::ShiftModifier ) ?
+          (int) ceil( nbSamples * 1.2 ) : (int) ceil( nbSamples * 0.75 );
+      if (e->key()==Qt::Key_0)
+        nbCasts   = ( modifiers != Qt::ShiftModifier ) ?
+          (int) ceil( nbCasts * 1.2 ) : (int) ceil( nbCasts * 0.75 );
+      handled = true;
+      std::cout << "Nb samples=" << nbSamples
+                << " Nb casts="   << nbCasts << std::endl; 
+    }
   return handled;
 }
 
