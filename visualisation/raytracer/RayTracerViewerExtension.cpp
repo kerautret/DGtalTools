@@ -135,8 +135,13 @@ DGtal::rt::RayTracerViewerExtension::keyPressEvent( Viewer& viewer, QKeyEvent *e
       Domain2D domain( Point2i( 0, 0 ) , Point2i( w, h ) );
       Image2D  image ( domain );
       renderer.setResolution( w, h );
-      if ( modifiers == Qt::ShiftModifier ) 
-        renderer.render( image, maxDepth );
+      if ( modifiers == Qt::ShiftModifier )
+        {
+          if ( nbSamples <= 1 )
+            renderer.render( image, maxDepth );
+          else
+            renderer.renderAntiAliased( image, maxDepth, nbSamples );
+        }
       else
         renderer.renderRandom( image, maxDepth, nbSamples, nbCasts );
       PPMWriter<Image2D,RealColor2Color>::exportPPM( "output.ppm", image,
@@ -148,7 +153,7 @@ DGtal::rt::RayTracerViewerExtension::keyPressEvent( Viewer& viewer, QKeyEvent *e
       if ( modifiers == Qt::ShiftModifier )
         { maxDepth = std::max( 1, maxDepth - 1 ); handled = true; }
       if ( modifiers == Qt::NoModifier )
-        { maxDepth = std::min( 20, maxDepth + 1 ); handled = true; }
+        { maxDepth = std::min( 40, maxDepth + 1 ); handled = true; }
       std::cout << "Max depth is " << maxDepth << std::endl; 
     }
   if (e->key()==Qt::Key_1)
@@ -163,10 +168,10 @@ DGtal::rt::RayTracerViewerExtension::keyPressEvent( Viewer& viewer, QKeyEvent *e
     {
       if (e->key()==Qt::Key_9)
         nbSamples = ( modifiers != Qt::ShiftModifier ) ?
-          (int) ceil( nbSamples * 1.2 ) : (int) ceil( nbSamples * 0.75 );
+          (int) ceil( nbSamples * 1.2 ) : (int) ceil( nbSamples * 0.5 );
       if (e->key()==Qt::Key_0)
         nbCasts   = ( modifiers != Qt::ShiftModifier ) ?
-          (int) ceil( nbCasts * 1.2 ) : (int) ceil( nbCasts * 0.75 );
+          (int) ceil( nbCasts * 1.2 ) : (int) ceil( nbCasts * 0.5 );
       handled = true;
       std::cout << "Nb samples=" << nbSamples
                 << " Nb casts="   << nbCasts << std::endl; 

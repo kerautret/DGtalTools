@@ -143,7 +143,7 @@ namespace DGtal {
         // m.specular  = RealColor( 0.393548, 0.271906, 0.166721 );
         m.shinyness = 56; // 25.6;
         m.coef_diffusion  = 0.5f;
-        m.coef_reflexion  = 0.75f;
+        m.coef_reflexion  = 0.5f; // 0.75f
         m.coef_refraction = 0.0f;
         m.in_refractive_index  = 1.0f;
         m.out_refractive_index = 1.0f;

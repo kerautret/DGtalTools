@@ -101,7 +101,7 @@ namespace DGtal {
       template <typename Image2D>
       void render( Image2D& image, int max_depth )
       {
-        std::cout << "Rendering into image ... might take a while." << std::endl;
+        DGtal::trace.beginBlock( "Accumulation rendering into image ... might take a while.");
         setResolution( image.extent()[ 0 ], image.extent()[ 1 ] );
         for ( int y = 0; y < myHeight; ++y ) 
           {
@@ -122,13 +122,14 @@ namespace DGtal {
               }
           }
         std::cout << "Done." << std::endl;
+        DGtal::trace.endBlock();
       }
       
       /// The main rendering routine
       template <typename Image2D>
       void renderRandom( Image2D& image, int max_depth, int nb_samples, int nb_casts )
       {
-        std::cout << "Random rendering into image ... might take a while." << std::endl;
+        DGtal::trace.beginBlock( "Random rendering into image ... might take a while.");
         setResolution( image.extent()[ 0 ], image.extent()[ 1 ] );
         int nb_ray = 0;
         for ( int y = 0; y < myHeight; ++y ) 
@@ -187,6 +188,68 @@ namespace DGtal {
                   << "Nb rays casted = " << nb_ray
                   << " Avg rays/pixel = "
                   << ( (double) nb_ray / (double) (myWidth*myHeight) ) << std::endl;
+        DGtal::trace.endBlock();
+      }
+      
+      /// The main rendering routine
+      template <typename Image2D>
+      void renderAntiAliased( Image2D& image, int max_depth, int nb_samples )
+      {
+        DGtal::trace.beginBlock( "Anti-aliased rendering into image ... might take a while.");
+        setResolution( image.extent()[ 0 ], image.extent()[ 1 ] );
+        int nb_ray = 0;
+        for ( int y = 0; y < myHeight; ++y ) 
+          {
+            Real ty_up = (((Real) y)-0.5f) / (Real)(myHeight);
+            Real ty_lo = (((Real) y)+0.5f) / (Real)(myHeight);
+            DGtal::trace.progressBar( ty_up, 1.0 );
+            Vector3 dirL_up = (1.0f - ty_up) * myDirUL + ty_up * myDirLL;
+            Vector3 dirR_up = (1.0f - ty_up) * myDirUR + ty_up * myDirLR;
+            Vector3 dirL_lo = (1.0f - ty_lo) * myDirUL + ty_lo * myDirLL;
+            Vector3 dirR_lo = (1.0f - ty_lo) * myDirUR + ty_lo * myDirLR;
+            dirL_up /= dirL_up.norm();
+            dirR_up /= dirR_up.norm();
+            dirL_lo /= dirL_lo.norm();
+            dirR_lo /= dirR_lo.norm();
+            for ( int x = 0; x < myWidth; ++x ) 
+              {
+                Real tx_lt = (((Real) x)-0.5f) / (Real)(myWidth);
+                Real tx_rt = (((Real) x)+0.5f) / (Real)(myWidth);
+                Vector3 dir_ul = (1.0f - tx_lt) * dirL_up + tx_lt * dirR_up;
+                Vector3 dir_ur = (1.0f - tx_rt) * dirL_up + tx_rt * dirR_up;
+                Vector3 dir_ll = (1.0f - tx_lt) * dirL_lo + tx_lt * dirR_lo;
+                Vector3 dir_lr = (1.0f - tx_rt) * dirL_lo + tx_rt * dirR_lo;
+                dir_ul /= dir_ul.norm();
+                dir_ur /= dir_ur.norm();
+                dir_ll /= dir_ll.norm();
+                dir_lr /= dir_lr.norm();
+                RealColor total_color = RealColor( 0.0, 0.0, 0.0 );
+                int k = 0;
+                const int max_k = nb_samples;
+                while ( k < max_k )
+                  {
+                    Real rx = ( k == 0 ) ? 0.5f : rand01();
+                    Real ry = ( k == 0 ) ? 0.5f : rand01();
+                    Vector3 dir = (1.0f - rx ) * (1.0f - ry ) * dir_ul
+                      + rx * (1.0f - ry ) * dir_ur
+                      + (1.0f - rx) * ry * dir_ll + rx * ry * dir_lr;
+                    dir /= dir.norm();
+                    Ray eye_ray( myOrigin, dir, max_depth );
+                    RealColor result = traceWithAccumulation( eye_ray, 1.0 );
+                    total_color += result;
+                    nb_ray++;
+                    k++;
+                  }
+                total_color = total_color * (1.0f / (Real) k );
+                total_color.clamp();
+                image.setValue( Point2i( x, y ), total_color );
+              }
+          }
+        std::cout << "Done." << std::endl
+                  << "Nb rays casted = " << nb_ray
+                  << " Avg rays/pixel = "
+                  << ( (double) nb_ray / (double) (myWidth*myHeight) ) << std::endl;
+        DGtal::trace.endBlock();
       }
       
 

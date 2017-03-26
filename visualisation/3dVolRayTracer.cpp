@@ -322,7 +322,7 @@ int main( int argc, char** argv )
   // Objects
   // Sphere* sphere0 = new Sphere( Point3( -600, 200, 800), 800.0, Material::emerald() );
   Sphere* sphere1 = new Sphere( Point3( -40.0*scale, 0, 40.0*scale), 40.0*scale, Material::mirror() );
-  // Sphere* sphere2 = new Sphere( Point3( 0, 4, 0.5), 10.0*scale, Material::glass() );
+  // Sphere* sphere2 = new Sphere( Point3( -6, 0, 5.0), 5.0, Material::glass() );
   // Sphere* sphere3 = new Sphere( Point3( 6, 6, 0), 3.0, Material::whitePlastic() );
   // Sphere* sphere4 = new Sphere( Point3( 5, 0, 0), 3.0, Material::bronze() );
   //scene.addObject( sphere0 );
