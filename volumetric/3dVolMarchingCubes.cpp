@@ -34,7 +34,7 @@
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/variables_map.hpp>
 #include <DGtal/kernel/sets/SetPredicate.h>
-#include <DGtal/io/readers/VolReader.h>
+#include <DGtal/io/readers/GenericReader.h>
 #include <DGtal/images/ImageSelector.h>
 #include <DGtal/images/SimpleThresholdForegroundPredicate.h>
 #include <DGtal/images/ImageLinearCellEmbedder.h>
@@ -69,7 +69,8 @@ adjacency.
  @b Allowed @b options @b are : 
  @code
   -h [ --help ]                         display this message
-  -i [ --input ] arg                    the volume file (.vol)
+  -i [ --input ] arg                    vol file (.vol, .longvol .p3d, .pgm3d and if
+                                        WITH_ITK is selected: dicom, dcm, mha, mhd).                                         
   -t [ --threshold ] arg (=1)           the value that defines the isosurface 
                                         in the image (an integer between 0 and 
                                         255).
@@ -149,7 +150,7 @@ int main( int argc, char** argv )
   //! [3dVolMarchingCubes-readVol]
   trace.beginBlock( "Reading vol file into an image." );
   typedef ImageSelector < Domain, int>::Type Image;
-  Image image = VolReader<Image>::importVol(inputFilename);
+  Image image =  GenericReader< Image >::import(inputFilename);
 
   typedef functors::SimpleThresholdForegroundPredicate<Image> ThresholdedImage;
   ThresholdedImage thresholdedImage( image, threshold );
