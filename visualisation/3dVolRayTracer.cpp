@@ -43,6 +43,7 @@
 #include <DGtal/topology/SetOfSurfels.h>
 #include <DGtal/topology/DigitalSurface.h>
 #include <DGtal/topology/helpers/Surfaces.h>
+#include <DGtal/images/SimpleThresholdForegroundPredicate.h>
 
 #include "raytracer/RayTracerViewerExtension.h"
 #include "raytracer/Scene.h"
@@ -54,6 +55,8 @@
 #include "raytracer/GraphicalTriangle.h"
 #include "raytracer/GraphicalParallelogram.h"
 #include "raytracer/GraphicalDigitalVolume.h"
+#include "raytracer/ImplicitDigitalVolume.h"
+#include "raytracer/GraphicalImplicitDigitalVolume.h"
 #include "raytracer/NormalEstimation.h"
 
 using namespace std;
@@ -199,6 +202,7 @@ int main( int argc, char** argv )
   general_opt.add_options()
     ("help,h", "display this message")
     ("input,i", po::value<std::string>(), "vol file (.vol) , pgm3d (.p3d or .pgm3d, pgm (with 3 dims)) file or sdp (sequence of discrete points)" )
+    ("antiAliasedInput,a", po::value<std::string>(), "antialiased vol file (.vol) , pgm3d (.p3d or .pgm3d, pgm (with 3 dims)) file or sdp (sequence of discrete points)" )
     ("material,w", po::value<std::string>()->default_value( "rPlastic" ), "the material chosen for the volume." )
     ("thresholdMin,m",  po::value<int>()->default_value(0), "threshold min (excluded) to define binary shape" )
     ("thresholdMax,M",  po::value<int>()->default_value(255), "threshold max (included) to define binary shape" )
@@ -226,7 +230,7 @@ int main( int argc, char** argv )
   po::notify(vm);
   if( ! parseOK || vm.count("help") )
     {
-      cerr << "Usage: " << argv[0] << " -i <volume.vol> [options]\n"
+      cerr << "Usage: " << argv[0] << " [-i|-a] <volume.vol> [options]\n"
            << "Displays then may compute a 3D raytracer rendering of the volume given as input. You may choose several normal estimators (II|VCM|Trivial|True), specified with -e."
            << endl
            << general_opt << "\n";
@@ -307,6 +311,23 @@ int main( int argc, char** argv )
       // Force interpolation of vector field
       trace.info() << "- Volume has interpolated normal: "
                    << ( vol->interpolatedEstimatedNormals ? "Yes" : "No" ) << std::endl;
+      scene.addObject( vol );
+      trace.endBlock();
+    }
+
+  if ( vm.count( "antiAliasedInput" ) )
+    {
+      string inputFilename = vm["antiAliasedInput"].as<string>();
+      int threshold        = 128;
+      std::string  material= vm["material"].as<string>();
+      trace.beginBlock( "Reading vol file into an image." );
+      typedef HyperRectDomain< Space3 >                 Domain;
+      typedef ImageContainerBySTLVector< Domain, int >  Image;
+      typedef GraphicalImplicitDigitalVolume< Image >   Volume;
+      Image image = VolReader<Image>::importVol(inputFilename);
+      trace.endBlock();
+      trace.beginBlock( "Making implicit digital volume." );
+      Volume* vol = new Volume( image, threshold, string2material( material ) );
       scene.addObject( vol );
       trace.endBlock();
     }

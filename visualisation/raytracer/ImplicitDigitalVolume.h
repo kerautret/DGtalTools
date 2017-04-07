@@ -44,18 +44,19 @@
 #include "DGtal/topology/SetOfSurfels.h"
 #include "DGtal/topology/DigitalSurface.h"
 #include "DGtal/topology/helpers/Surfaces.h"
-#include "DGtal/dec/DiscreteExteriorCalculus.h"
-#include "DGtal/dec/DiscreteExteriorCalculusSolver.h"
+#include "DGtal/shapes/implicit/ImplicitPolynomial3Shape.h"
 
 namespace DGtal {
   namespace rt {
 
     /// A triangle is a model of GraphicalObject.
-    template <typename TBooleanImage>
+    template <typename TImage>
     struct ImplicitDigitalVolume : public virtual GeometricalObject {
 
-      typedef TBooleanImage                    BooleanImage;
+      typedef TImage                           Image;
       typedef KSpace3                          KSpace;
+      typedef typename TImage::Value           Value;
+      typedef functors::SimpleThresholdForegroundPredicate<Image> ThresholdedImage;
       typedef KSpace3::SCell                   SCell;
       typedef KSpace3::Cell                    Cell;
       typedef KSpace3::SCellSet                SCellSet;
@@ -64,49 +65,25 @@ namespace DGtal {
       typedef std::map<SCell,Vector3>          VectorField;
       typedef VectorField                      NormalMap;
 
-      typedef EigenLinearAlgebraBackend        LinearAlgebra;
       typedef KSpace::Space                         Space;
       typedef Space::Point                          Point;
       typedef Space::RealVector                     RealVector;
       typedef RealVector::Component                 Scalar;
       typedef KSpace::Surfel                        Surfel;
-      typedef HyperRectDomain<Space>                         Domain;
-      typedef DiscreteExteriorCalculus<3,3, LinearAlgebra>   Calculus;
-      typedef DiscreteExteriorCalculusFactory<LinearAlgebra> CalculusFactory;
-      typedef Calculus::Index                       Index;
-      typedef Calculus::PrimalForm0                 PrimalForm0;
-      typedef Calculus::PrimalForm1                 PrimalForm1;
-      typedef Calculus::PrimalForm2                 PrimalForm2;
-      typedef Calculus::DualIdentity0               DualIdentity0;
-      typedef Calculus::PrimalDerivative0           PrimalDerivative0;
-      typedef Calculus::PrimalDerivative1           PrimalDerivative1;
-      typedef Calculus::DualDerivative0             DualDerivative0;
-      typedef Calculus::DualDerivative1             DualDerivative1;
-      typedef Calculus::PrimalAntiderivative1       PrimalAntiderivative1;
-      typedef Calculus::PrimalAntiderivative2       PrimalAntiderivative2;
-      typedef Calculus::DualAntiderivative1         DualAntiderivative1;
-      typedef Calculus::DualAntiderivative2         DualAntiderivative2;
-      typedef Calculus::PrimalHodge0                PrimalHodge0;
-      typedef Calculus::PrimalHodge1                PrimalHodge1;
-      typedef Calculus::PrimalHodge2                PrimalHodge2;
-      typedef Calculus::DualHodge0                  DualHodge0;
-      typedef Calculus::DualHodge1                  DualHodge1;
-      typedef Calculus::DualHodge2                  DualHodge2;
-      typedef LinearAlgebra::SolverSimplicialLLT    LinearAlgebraSolver;
-      typedef DiscreteExteriorCalculusSolver<Calculus, LinearAlgebraSolver, 0, DUAL, 0, DUAL> 
-      SolverU;
-
+      typedef HyperRectDomain<Space>                Domain;
+      typedef ImplicitPolynomial3Shape<Space>       PolynomialShape;              
+      typedef typename PolynomialShape::Polynomial3 Polynomial;
+      
       BOOST_STATIC_ASSERT(( KSpace::dimension == 3 ));
 
       
-      /// Creates a parallelogram of vertices \a a, \a b and \a c, and
-      /// last vertex is computed as \f$ a + b-a + c-a \f$.
       inline
-      ImplicitDigitalVolume( Clone<BooleanImage> anImage )
-        : bimage( anImage ), ptrSurface( 0 )
+      ImplicitDigitalVolume( Clone<TImage> anImage, Value threshold )
+        : myImage( anImage ), myThresholdedImage( myImage, threshold ),
+          myT( threshold ), ptrSurface( 0 )
       {
-        K.init( bimage.domain().lowerBound(),
-                bimage.domain().upperBound(), true );
+        K.init( myImage.domain().lowerBound(),
+                myImage.domain().upperBound(), true );
         Point3i lo   = K.uCoords( K.lowerCell() ); 
         Point3i hi   = K.uCoords( K.upperCell() );
         Point3 A000 = Point3( lo ) - Point3::diagonal( 0.5 );
@@ -124,108 +101,235 @@ namespace DGtal {
         sides.push_back( Parallelogram( A111, A101, A110 ) ); // right  (1yz)
         sides.push_back( Parallelogram( A111, A110, A011 ) ); // back   (x1z)
         SCellSet boundary;
-        Surfaces<KSpace3>::sMakeBoundary( boundary, K, bimage,
+        Surfaces<KSpace3>::sMakeBoundary( boundary, K, myThresholdedImage,
                                           K.lowerBound(), K.upperBound() );
         ptrSurface = new Surface( new SurfaceStorage( K, true, boundary ) );
-        // Build trivial normal field.
-        for ( auto surfel : boundary )
-          {
-            Vector3 N = trivialNormal( surfel );
-            inputNormals[ surfel ] = N;
-          }
         // interpolateVectorField( trivialNormals, true );
+        // Init polynomials
+        Polynomial X[ 2 ][ 3 ];
+        X[ 1 ][ 0 ] = mmonomial<Scalar>( 1, 0, 0 );
+        X[ 1 ][ 1 ] = mmonomial<Scalar>( 0, 1, 0 );
+        X[ 1 ][ 2 ] = mmonomial<Scalar>( 0, 0, 1 );
+        for ( Dimension i = 0; i < 3; ++i )
+          X[ 0 ][ i ] = mmonomial<Scalar>( 0, 0, 0 ) - X[ 1 ][ i ];
+        for ( Dimension i = 0; i < 8; ++i )
+          P[ i ] = X[ i & 1 ? 1 : 0 ][ 0 ]
+            *      X[ i & 2 ? 1 : 0 ][ 1 ]
+            *      X[ i & 4 ? 1 : 0 ][ 2 ];
       }
     
       /// Virtual destructor since object contains virtual methods.
       ~ImplicitDigitalVolume() {}
 
-      /// Chooses the rendering mode according to parameters
-      void setMode( bool estimatedNormals, bool Phong, bool smoothed )
+      
+      Image&            image()   { return myImage; }
+      ThresholdedImage& thresholdedImage()   { return myThresholdedImage; }
+      KSpace3&          space()   { return K; }
+      const Surface&    surface() { return *ptrSurface; }
+
+      /// @return the normal vector at point \a p on the object (\a p
+      /// should be on or close to the sphere).
+      virtual Vector3 getNormal( Point3 p )
       {
-        // Need given estimated normals to use estimated normals !
-        useEstimatedNormals = interpolatedEstimatedNormals ? estimatedNormals : false;
-        shiftFactor         = smoothed ? 1.0 : 0.0;
-        PhongShading        = Phong;
+        if ( p == last_p )
+          return last_n;
+        trace.warning() << "[ImplicitDigitalVolume::getNormal] Movement after ray ?"
+                        << " p=" << p << " last_p=" << last_p
+                        << " last_n=" << last_n << std::endl;
+        return last_n;
+      }
+
+      /// @param[in,out] ray_inter as input the incoming ray, as
+      /// output information abour intersection.
+      ///
+      /// @return true if there was an intersection, false otherwise
+      /// (more information is stored in ray_inter)
+      virtual bool intersectRay( RayIntersection& ray_inter )
+      {
+        // Checks first that it intersects the bounding box.
+        Point3 p  [ 6 ];
+        bool   hit[ 6 ];
+        const Ray& ray = ray_inter.ray;
+        int    nb_hit  = 0;
+        Real   dist    = 100000000.0;
+        Real   alpha   = 0.0;
+        unsigned int j = 6;
+        for ( unsigned int i = 0; i < 6; i++ )
+          {
+            hit[ i ] = sides[ i ].intersectRay( ray_inter );
+            Real d   = ray_inter.distance;
+            p[ i ]   = ray_inter.intersection;
+            dist     = std::min( d, dist );
+            hit[ i ] = d < 0.0;
+            if ( hit[ i ] )
+              {
+                nb_hit++;
+                Real beta = ( p[ i ] - ray.origin ).dot( ray.direction );
+                if ( ( beta > RT_EPSILON )
+                     && ( ( j == 6 ) || ( beta < alpha ) ) )
+                  {
+                    j = i;
+                    alpha = beta;
+                  }
+              }
+          }
+        ray_inter.distance = dist;
+        if ( nb_hit == 0 ) return false;
+        if ( j == 6 ) {
+          trace.warning() << "No closest point !" << std::endl;
+          return false;
+        }
+        // To check that the bounding box is correct.
+        // p_intersect = p[ j ];
+        // last_n = sides[ j ].getNormal( p_intersect );
+        // return -1.0;
+
+        // (0) Checks if origin is in the volume
+        Point3i origin ( (Integer) round( ray.origin[ 0 ] ),
+                         (Integer) round( ray.origin[ 1 ] ),
+                         (Integer) round( ray.origin[ 2 ] ) );
+        bool origin_in = myImage.domain().isInside( origin );
+        Point3  q      = origin_in ? ray.origin : p[ j ];
+        trace.info() << "Inside: q=" << q << std::endl;
+        // Now casts the ray in the volume
+        // (1) build a digital ray
+        Ray ray2( q, ray.direction, ray.depth ); //p[ j ]
+        StandardDSL3d D( ray2,
+                         RT_PRECISION*( K.upperBound() - K.lowerBound() ).norm1() );
+        // (2) sort points along ray
+        // Point3i origin = D.getPoint( ray.origin + RT_BANDWIDTH * ray.direction );  // 0.5*delta );
+        Point3i first  = origin_in ? origin : D.getPoint( p[ j ] );
+        bool prev_state = myImage.domain().isInside( first )
+          ? myThresholdedImage( first ) != 0 : false;
+        StandardDSL3d::ConstIterator it  = D.begin( first );
+        // std::cout << "- beg=" << *it << " end=" << *itE << std::endl;
+        if ( ! D.isInDSL( *it  ) )
+          {
+            trace.warning() << " *it=" << *it << " not inside"
+                            << " Dxy=" << D.xy
+                            << " Dxz=" << D.xz
+                            << " Dyz=" << D.yz << std::endl;
+            ray_inter.distance = 1.0f;
+            return false;
+          }
+        Point3i prev_p  = *it++;
+        // bool prev_state = bimage.domain().isInside( prev_p )
+        //   ? bimage( prev_p ) != 0 : false;
+        while ( true )
+          {
+            Point3i p  = *it;
+            if ( ! myImage.domain().isInside( *it  ) )
+              {
+                // trace.info() << " " << p << " not inside." << std::endl;
+                break;
+              }
+            bool state = myThresholdedImage( p );
+            if ( state != prev_state ) // intersection
+              {
+                Dimension k = ( p[ 0 ] != prev_p[ 0 ] ) ? 0
+                  : ( ( p[ 1 ] != prev_p[ 1 ] ) ? 1 : 2 );
+                SCell voxel  = K.sSpel( prev_p, prev_state ? K.POS : K.NEG );
+                SCell surfel = K.sIncident( voxel, k, p[ k ] > prev_p[ k ] );
+                // p_intersect = 0.5 * Point3( K.sKCoords( surfel ) );
+                // return -1.0;
+                bool local_i = intersectSurfel( ray_inter, surfel );
+                if ( local_i ) return true;
+              }
+            prev_p     = p;
+            prev_state = state;
+            ++it;
+          }
+        // trace.warning() << "No intersection found !" << std::endl;
+        return false;
+      }
+
+      bool intersectSurfel( RayIntersection& ray_inter, SCell surfel )
+      { 
+        Dimension k = K.sOrthDir( surfel );
+        Dimension i = (k+1)%3;
+        Dimension j = (k+2)%3;
+        if ( surfel != last_surfel )
+          {
+            // Build parallelogram
+            Cell      c = K.unsigns( surfel );
+            Point3    A = Point3( K.uCoords( c ) ) - Point3::diagonal( 0.5 );
+            Point3    B = A; B[ i ] += 1.0; // + 2.0*RT_BANDWIDTH;
+            Point3    C = A; C[ j ] += 1.0; // + 2.0*RT_BANDWIDTH;
+            last_square = Parallelogram( A, B, C );
+            last_surfel = surfel;
+          }
+        Real x,y,a,b;
+        bool intersect = last_square.intersectRay( ray_inter );
+        Point3       p = ray_inter.intersection;
+        last_square.coordinates( p, x, y );
+        // std::cout << " p=" << p << " x=" << x << " y=" << y << std::endl;
+        x           = std::min( 1.0, std::max( 0.0, x ) );
+        y           = std::min( 1.0, std::max( 0.0, y ) );
+        a           = 2.0*x-1.0;
+        b           = 2.0*y-1.0;
+        // We build the correct 8-cube around the surfel
+        Point3i base = K.sCoords( surfel );
+        base[ i ]   -= a >= 0.0 ? 0 : 1;
+        base[ j ]   -= b >= 0.0 ? 0 : 1;
+        // Make the local polynomial isosurface
+        Polynomial L;
+        for ( Dimension l = 0; l < 8; l++ )
+          {
+            Point3i voxel( base[ 0 ] + (l & 1) ? 1 : 0,
+                           base[ 1 ] + (l & 2) ? 1 : 0,
+                           base[ 2 ] + (l & 4) ? 1 : 0 );
+            Value v = myImage.domain().isInside( voxel ) ? myImage( voxel ) : 0;
+            L      += ((Scalar) ( v - myT )) * P[ l ];
+          }
+        PolynomialShape PS( L );
+        // Checks for intersection along ray
+        Point3 q   = p;
+        bool found = intersectPolynomialShape( PS, ray_inter.ray.direction, q );
+        if ( ! found ) return false;
+        last_n     = PS.gradient( q );
+        last_n    /= last_n.norm();
+        last_p     = q;
+        ray_inter.normal       = last_n;
+        ray_inter.intersection = q;
+        ray_inter.reflexion    = q;
+        ray_inter.refraction   = q;
+        ray_inter.distance     = -1.0;
+        return true;
+      }
+
+      bool intersectPolynomialShape( const PolynomialShape& PS, const Vector3& u,
+                                     Point3& q )
+      {
+        const int   iter = 10;
+        const Scalar att = 0.5;
+        const Scalar eps = 0.1;
+        Scalar      diff = PS( q );
+        for ( int n = 0; n < iter && ( fabs( diff ) >= eps ); n++ )
+          {
+            Vector3  g = PS.gradient( q );
+            Scalar dgu = g.dot( u );
+            q         += (att * dgu) * u;
+            diff       = PS( q );
+          }
+        return ( fabs( diff ) >= eps );
       }
       
-      BooleanImage&  image()   { return bimage; }
-      KSpace3&       space()   { return K; }
-      const Surface& surface() { return *ptrSurface; }
-
-      /// computes the implicit function
-      void computeImplicitFunction()
-      {
-        DGtal::trace.beginBlock( "Computing DEC" );
-        /// The discrete exterior calculus instance.
-        Calculus calculus;
-        DGtal::trace.info() << "- add cells" << std::endl;
-        calculus.myKSpace = space();
-        // Adds all the cell
-        for ( auto surfel : surface() )
-          {
-            calculus.insertSCell( surfel );
-            Dimension k = space().sOrthDir( surfel );
-            calculus.insertSCell( space().sIncident( surfel, k, true ) );
-            calculus.insertSCell( space().sIncident( surfel, k, false ) );
-          }
-        calculus.updateIndexes();
-        DGtal::trace.info() << "- dual_D0" << std::endl;
-        DualDerivative0 dual_D0  = calculus.template derivative<0,DUAL>();
-        DualIdentity0   dual_Id0 = calculus.template identity  <0,DUAL>();
-        DualIdentity0   M        = dual_D0.transpose() * dual_D0 + 0.001 * dual_Id0;
-        DualForm1       n( calculus );
-        DualForm0       f( calculus );
-        DGtal::trace.info() << "- dual 1-form n and dual 0-form f" << std::endl;
-        for ( auto sn : inputNormals )
-          {
-            SCell  surfel = sn.first;
-            Dimension   k = space().sOrthDir( surfel );
-            SCell  in_vox = space().sDirectIncident( surfel, k );
-            SCell out_vox = space().sIndirectIncident( surfel, k );
-            Vector3 n_est = sn.second;
-            Index    idx  = calculus.getCellIndex( space().unsigns( surfel ) );
-            Index in_idx  = calculus.getCellIndex( space().unsigns( in_vox ) );
-            Index out_idx = calculus.getCellIndex( space().unsigns( out_vox ) );
-            n.myContainer( idx )     = in_n[ k ];
-            f.myContainer( in_idx )  = 0.5;
-            f.myContainer( out_idx ) = -0.5;
-          }
-        DGtal::trace.info() << "- prefactoring matrix M := A'^t A' + a Id" << std::endl;
-        SolverU solver( calculus );
-        solver.compute( M );
-        DGtal::trace.info() << "- solving M u = A'^t n + a f" << std::endl;
-        DualForm0 v = dual_D0.transpose() * n + 0.001 * f;
-        DualForm0 u = solver.solve( v );
-        DGtal::trace.info() << ( solver.isValid() ? "=> OK" : "ERROR" )
-                            << " " << solver.myLinearAlgebraSolver.info() << std::endl;
-        // TODO
-      }
-
       // ----------------------------------------------------------------------
       
-      /// A reference to the boolean image.
-      BooleanImage  bimage;
+      /// A clone of the image.
+      Image            myImage;
+      /// The thresholded image.
+      ThresholdedImage myThresholdedImage;
+      /// The threshold
+      Value            myT;
       /// the Khalimsky space
       KSpace3       K;
+      /// Polynomial associated with each vertex of the 8-cube;
+      Polynomial    P[ 8 ];
       /// Sides of the bounding box of the digital volume.
       std::vector<Parallelogram> sides;
       /// The digital surface corresponding to the boundary of bimage.
-      Surface*       ptrSurface;
-      /// Map cell -> input normal vector
-      VectorField   inputNormals;
-      /// Map cell -> normal vector
-      VectorField   normals;
-      /// Map cell -> position
-      VectorField   positions;
-      /// Tells if we wish to use estimated normals or trivial normals
-      bool          useEstimatedNormals;
-      /// Tells if the normal vector field has been interpolated (for Phong).
-      bool          interpolatedEstimatedNormals;
-      /// Mode for rendering digital object (0: flat, 1: Phong)
-      bool          PhongShading;
-      /// Tells how intersected points are displaced from the digitized boundary
-      /// 0: digital, 1: "smooth"
-      Real          shiftFactor;
+      Surface*      ptrSurface;
       /// Last point of intersection
       Point3        last_p;
       /// Last normal at intersection
