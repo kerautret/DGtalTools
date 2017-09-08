@@ -1,10 +1,56 @@
+# DGtalTools 0.9.4
+
+- *visualisation*:
+  - Improve visualisation tools (vol2heightfield, vol2obj, vol2raw, vol2sdp, vol2slice, volBoundary2obj, 3dImageViewer, 3dVolViewer, sliceViewer, Viewer3DImage)
+    allowing to read longvol including rescaling.
+    (Bertrand Kerautret, [#296](https://github.com/DGtal-team/DGtalTools/pull/296))
+  - meshViewer: add an option to set the ambient light source.
+    (Bertrand Kerautret, [#301](https://github.com/DGtal-team/DGtalTools/pull/301))
+
 # DGtalTools 0.9.3
+
+- *visualisation*:
+  - Add an option to filter vector displayed in 3dSDPViewer.
+  (Bertrand Kerautret, [#296](https://github.com/DGtal-team/pull/296)
+
+
+# DGtalTools 0.9.3
+
+- *global*:
+   - Various fixes to enable the new Version3 (compressed) Vol/Longvol files.
+     (David Coeurjolly, [#287](https://github.com/DGtal-team/pull/287))
+   - Fix Appveyor continuous integration with zlib installation and boost fix.
+     (Bertrand Kerautret, [#289](https://github.com/DGtal-team/DGtalTools/pull/289))
+   
+- *imageProcessing*:
+   - Creates imageProcessing directory. Add tools for doing image restoration 
+     and inpainting with Ambrosio-Tortorelli functional and discrete calculus. 
+     (Jacques-Olivier Lachaud, Marion Foare
+     [#280](https://github.com/DGtal-team/DGtalTools/pull/280))
 
 - *converters*:
    - fix tool itk2vol which was not able to read and convert int type image.
-   (Bertrand Kerautret, [#276](https://github.com/DGtal-team/DGtalTools/pull/271))
+     (Bertrand Kerautret, [#276](https://github.com/DGtal-team/DGtalTools/pull/271))
+   - add a CLOSURE export mode in volBoundary2obj. Default mode has been changed
+     to "BDRY"
+     (David Coeurjolly, [#281](https://github.com/DGtal-team/DGtalTools/pull/281))
 
+- *visualisation*:
+   - Add SnapShot option for meshViewer and 3dVolViewer
+     (useful to get visualisation without interaction like for scripting and/or
+     online demonstration). It also contains a new option to display a mesh in
+     3DvolViewer.
+     (Bertrand Kerautret, [#282](https://github.com/DGtal-team/DGtalTools/pull/282))
+   - Add an option to display vector fields in displayContours
+     (Bertrand Kerautret, [#290](https://github.com/DGtal-team/DGtalTools/pull/290))
 
+- *estimators*:
+    - 2dlocalEstimators: add an option to export the generated contour.
+     (Bertrand Kerautret, [#285](https://github.com/DGtal-team/DGtalTools/pull/285))
+    - tangentBC: add an option to read sdp points as input.
+     (Bertrand Kerautret, [#285](https://github.com/DGtal-team/DGtalTools/pull/288))
+    
+    
 # DGtalTools 0.9.2
 
 - *global*:
@@ -16,12 +62,12 @@
   - renaming of the shapeGenerator folder to generators (David Coeurjolly, [#268](https://github.com/DGtal-team/DGtalTools/pull/268)))
 
 - *visualisation*:
- - meshViewer: add a key to display mesh information about number of 
+ - meshViewer: add a key to display mesh information about number of
     vertex/faces.
     (Bertrand Kerautret,
     [#273](https://github.com/DGtal-team/DGtalTools/pull/272))
 
-  - 3dSDPViewer: fix the mesh display which was not given with their original 
+  - 3dSDPViewer: fix the mesh display which was not given with their original
    colors. (Bertrand Kerautret,
    [#272](https://github.com/DGtal-team/DGtalTools/pull/272))
 

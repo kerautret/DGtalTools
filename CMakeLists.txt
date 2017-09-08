@@ -14,7 +14,7 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 # -----------------------------------------------------------------------------
 message(STATUS "-------------------------------------------------------------------------------")
 message(STATUS "Checking if DGtal is installed:")
-FIND_PACKAGE(DGtal 0.9.2 REQUIRED)
+FIND_PACKAGE(DGtal 0.9.3 REQUIRED)
 INCLUDE_DIRECTORIES(${DGTAL_INCLUDE_DIRS})
 LINK_DIRECTORIES(${DGTAL_LIBRARY_DIRS})
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -42,7 +42,7 @@ endif (CMAKE_CXX_FLAGS MATCHES "-ftemplate-depth-[0-9]*")
 SET(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 SET(DGtalTools_VERSION_MAJOR 0)
 SET(DGtalTools_VERSION_MINOR 9)
-SET(DGtalTools_VERSION_PATCH beta3)
+SET(DGtalTools_VERSION_PATCH 3)
 SET(DGTALTOOLS_VERSION "${DGtalTools_VERSION_MAJOR}.${DGtalTools_VERSION_MINOR}.${DGtalTools_VERSION_PATCH}")
 SET(PROJECT_VERSION "${DGtalTools_VERSION_MAJOR}.${DGtalTools_VERSION_MINOR}.${DGtalTools_VERSION_PATCH}")
 SET(VERSION ${DGtalTools_VERSION_MAJOR}.${DGtalTools_VERSION_MINOR}.${DGtalTools_VERSION_PATCH})
@@ -54,13 +54,13 @@ SET(Boost_FOUND FALSE)
 FIND_PACKAGE(Boost 1.46.0 REQUIRED COMPONENTS program_options)
 if ( Boost_FOUND )
   message(STATUS "Boost and boost_program_options found.")
+  ADD_DEFINITIONS(${BOOST_DEFINITIONS} -DBOOST_ALL_NO_LIB)    
   include_directories( ${Boost_INCLUDE_DIRS} )
   SET(DGtalToolsLibDependencies ${DGtalToolsLibDependencies}
      ${Boost_LIBRAIRIES}
      ${Boost_PROGRAM_OPTIONS_LIBRARY})
    SET(DGtalLibInc ${Boost_INCLUDE_DIRS})
 endif( Boost_FOUND )
-
 
 
 
@@ -81,3 +81,4 @@ add_subdirectory(estimators)
 add_subdirectory(converters)
 add_subdirectory(visualisation)
 add_subdirectory(geometricTransform)
+add_subdirectory(imageProcessing)
