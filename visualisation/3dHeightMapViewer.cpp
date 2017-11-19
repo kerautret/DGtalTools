@@ -74,6 +74,7 @@ namespace po = boost::program_options;
                                  1.0)
   -c [ --colorMap ]              define the heightmap color with a pre-defined 
                                  colormap (GradientColorMap)
+  -n [ --noColor ]               display the surface without colors (in white)
   -t [ --colorTextureImage ] arg define the heightmap color from a given color 
                                  image (32 bits image).
   -i [ --input-file ] arg        2d input image representing the height map 
@@ -217,6 +218,7 @@ int main( int argc, char** argv )
     ("help,h", "display this message")
     ("scale,s", po::value<double>()->default_value(1.0), "set the scale of the maximal level. (default 1.0)")
     ("colorMap,c", "define the heightmap color with a pre-defined colormap (GradientColorMap)")
+    ("noColor,n", "display the surface without colors (in white)")
     ("colorTextureImage,t",po::value<std::string>(),  "define the heightmap color from a given color image (32 bits image).")
     ("input-file,i", po::value<std::string>(), "2d input image representing the height map (given as grayscape image cast into 8 bits)." );
 
@@ -293,13 +295,22 @@ int main( int argc, char** argv )
     Z3i::Point pt = K.sCoords(K.sDirectIncident( *it, 2 ));
     functors::Projector<SpaceND<2,int> > proj;
     Image2DG::Value val = image(proj(pt));
-    if(vm.count("colorMap")){
+    if(vm.count("colorMap"))
+    {
       viewer.setFillColor(gradientShade(val));
-    }else if (vm.count("colorTextureImage")) {
-      viewer.setFillColor(Color(imageTexture(proj(pt))));
-    }else{
-      viewer.setFillColor(grayShade(val));
     }
+    else if (vm.count("colorTextureImage"))
+    {
+      viewer.setFillColor(Color(imageTexture(proj(pt))));
+    }
+    else if (! vm.count("noColor"))
+    {
+      viewer.setFillColor(grayShade(val));
+    }else
+    {
+      viewer.setFillColor(DGtal::Color::White);
+    }
+        
   viewer << *it;
   }
 
