@@ -11,7 +11,8 @@
     (Bertrand Kerautret, [#303](https://github.com/DGtal-team/DGtalTools/pull/303))
   - 3dSDPViewer: new option to display vector field as unit vectors.
     (Bertrand Kerautret, [#304](https://github.com/DGtal-team/DGtalTools/pull/304)) 
-
+  - 3dHeightMapViewer: add an option to hide the clipping plane.
+    (Bertrand Kerautret, [#304](https://github.com/DGtal-team/DGtalTools/pull/312)) 
 
 
 - *global*:

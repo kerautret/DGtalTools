@@ -103,13 +103,14 @@ template < typename Space = DGtal::Z3i::Space, typename KSpace = DGtal::Z3i::KSp
 struct Viewer3DImageSpec: public DGtal::Viewer3D <Space, KSpace>
 {
   Viewer3DImageSpec(Z2i::RealPoint pup, Z2i::RealPoint plow): myZScale(1.0), myZposClipping(10.0),
-                                                              myPUpper(pup), myPLower(plow){
+                                                              myPUpper(pup), myPLower(plow),myClippingPlane(true){
     DGtal::Viewer3D<>::update();
   };
 
 virtual  void
 init(){
    DGtal::Viewer3D<>::init();
+   QGLViewer::setKeyDescription ( Qt::Key_N, "don't display the clippping plane." );
    QGLViewer::setKeyDescription ( Qt::Key_Up, "Move Up the cutting plane in the Z axis direction." );
    QGLViewer::setKeyDescription ( Qt::Key_Down, "Move Down the cutting plane in the Z axis direction." );
    QGLViewer::setKeyDescription ( Qt::Key_Shift, "Change the cutting plane move with step 1 (5 by default)" );
@@ -122,27 +123,35 @@ protected:
   double myZScale;
   double myZposClipping;
   Z2i::RealPoint myPUpper, myPLower;
+  bool myClippingPlane;
 
   virtual void draw (  ){
     DGtal::Viewer3D<>::draw();
-    glPushMatrix();
-    glMultMatrixd ( DGtal::Viewer3D<>::manipulatedFrame()->matrix() );
-    glPushMatrix();
-    glScalef(1.0, 1.0, myZScale);
-    glEnable( GL_LIGHTING );
-    glBegin( GL_QUADS );
-    glColor4ub( 50, 50, 240,  150 );
-    glNormal3f( 0, 0 , 1.0 );
-    glVertex3f( myPLower[0], myPLower[1] , myZposClipping );
-    glVertex3f( myPUpper[0], myPLower[1] , myZposClipping );
-    glVertex3f( myPUpper[0], myPUpper[1], myZposClipping );
-    glVertex3f( myPLower[0], myPUpper[1],  myZposClipping );
-    glEnd();
-    glPopMatrix();
-    glPopMatrix();
+    if (myClippingPlane)
+    {
+      glPushMatrix();
+      glMultMatrixd ( DGtal::Viewer3D<>::manipulatedFrame()->matrix() );
+      glPushMatrix();
+      glScalef(1.0, 1.0, myZScale);
+      glEnable( GL_LIGHTING );
+      glBegin( GL_QUADS );
+      glColor4ub( 50, 50, 240,  150 );
+      glNormal3f( 0, 0 , 1.0 );
+      glVertex3f( myPLower[0], myPLower[1] , myZposClipping );
+      glVertex3f( myPUpper[0], myPLower[1] , myZposClipping );
+      glVertex3f( myPUpper[0], myPUpper[1], myZposClipping );
+      glVertex3f( myPLower[0], myPUpper[1],  myZposClipping );
+      glEnd();
+      glPopMatrix();
+      glPopMatrix();
+    }
   }
   virtual void keyPressEvent ( QKeyEvent *e ){
     bool handled = false;
+    if( e->key() == Qt::Key_N)
+    {
+      myClippingPlane=!myClippingPlane;
+    }
     if( e->key() == Qt::Key_Up){
       if((e->modifiers() & Qt::MetaModifier)){
         myZposClipping+=1;
