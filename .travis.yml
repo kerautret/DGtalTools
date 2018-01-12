@@ -50,7 +50,7 @@ addons:
 before_install:
   - DOC="false"
   - if [ $CONFIG == "DOCUMENTATION" ]; then if [ $OriginalRepo == "true" ];  then if [ $TRAVIS_PULL_REQUEST == "false" ]; then DOC="true"; fi; fi; fi
-  -  openssl aes-256-cbc -K $encrypted_47769ec71275_key -iv $encrypted_47769ec71275_iv -in .travis/dgtal_rsa.enc -out .travis/dgtal_rsa -d; chmod 600 .travis/dgtal_rsa; 
+  - openssl aes-256-cbc -K $encrypted_47769ec71275_key -iv $encrypted_47769ec71275_iv -in .travis/dgtal_rsa.enc -out .travis/dgtal_rsa -d; chmod 600 .travis/dgtal_rsa; 
   - env
   - export SRC_DIR="`pwd`"
   - if [ $CXX == "g++" ]; then export CXX="g++-4.8"  CC="gcc-4.8"  CCOMPILER="gcc-4.8" CXXCOMPILER="g++-4.8"; fi
@@ -74,7 +74,7 @@ before_script:
   - wget http://dgtal.org/doc/tags/Board-tagfile;
 
 script:
-   - if [ $DOC == "true" ]; then  cmake . -DDGtal_DIR=$PWD/DGtal -DDOXYGEN_EXECUTABLE=$HOME/doxygen/doxygen-1.8.10/bin/doxygen  -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=$CXXCOMPILER -DCMAKE_C_COMPILER=$CCOMPILER ; else cmake . -DDGtal_DIR=$PWD/DGtal  -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=$CXXCOMPILER -DCMAKE_C_COMPILER=$CCOMPILER fi
+   - if [ $DOC == "true" ]; then  cmake . -DDGtal_DIR=$PWD/DGtal -DDOXYGEN_EXECUTABLE=$HOME/doxygen/doxygen-1.8.10/bin/doxygen  -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=$CXXCOMPILER -DCMAKE_C_COMPILER=$CCOMPILER ; else cmake . -DDGtal_DIR=$PWD/DGtal  -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=$CXXCOMPILER -DCMAKE_C_COMPILER=$CCOMPILER ; fi
     
    - if [ $DOC == "true" ]; then  make doc;  rsync -azv --delete --delete-after -e 'ssh -oStrictHostKeyChecking=no -i  .travis/dgtal_rsa' html/ dgtal@liris.cnrs.fr:/home/dgtal/public_html/doc/tools/nightly/;  fi
    - if [ $CONFIG == "Debug" ]; then make; fi
