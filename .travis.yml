@@ -32,8 +32,6 @@ addons:
    packages:
     - libhdf5-serial-dev
     - libcairo2-dev
-    - doxygen
-    - doxygen-latex
     - graphviz
     - libgmp-dev
     - libgdcm2-dev
