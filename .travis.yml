@@ -74,7 +74,7 @@ before_script:
   - wget http://dgtal.org/doc/tags/Board-tagfile;
 
 script:
-    - if [ $DOC == "true" ]; then  cmake . -DDGtal_DIR=$PWD/DGtal -DDOXYGEN_EXECUTABLE=$HOME/doxygen/doxygen-1.8.10/bin/doxygen  -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=$CXXCOMPILER -DCMAKE_C_COMPILER=$CCOMPILER ; else cmake . -DDGtal_DIR=$PWD/DGtal  -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=$CXXCOMPILER -DCMAKE_C_COMPILER=$CCOMPILER fi
+   - if [ $DOC == "true" ]; then  cmake . -DDGtal_DIR=$PWD/DGtal -DDOXYGEN_EXECUTABLE=$HOME/doxygen/doxygen-1.8.10/bin/doxygen  -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=$CXXCOMPILER -DCMAKE_C_COMPILER=$CCOMPILER ; else cmake . -DDGtal_DIR=$PWD/DGtal  -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=$CXXCOMPILER -DCMAKE_C_COMPILER=$CCOMPILER fi
     
    - if [ $DOC == "true" ]; then  make doc;  rsync -azv --delete --delete-after -e 'ssh -oStrictHostKeyChecking=no -i  .travis/dgtal_rsa' html/ dgtal@liris.cnrs.fr:/home/dgtal/public_html/doc/tools/nightly/;  fi
    - if [ $CONFIG == "Debug" ]; then make; fi
