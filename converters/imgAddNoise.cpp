@@ -89,6 +89,27 @@ void missingParam ( std::string param )
   exit ( 1 );
 }
 
+
+double
+randUniforme (double min, double max){
+  double r;
+  r = (double) rand() / (double) RAND_MAX;
+  return ( r*(max-min) + min);
+}
+
+
+
+
+double
+randomGaussien (double moyenne, double ecartType){
+  double r1 = randUniforme (0.0, 1.0);
+  double r2 = randUniforme (0.0, 1.0);
+  double r = sqrt (-2.0 * log(r1)) * cos (2.0 * M_PI * r2);
+  return (moyenne + ecartType * r);
+}
+
+
+
 typedef ImageSelector < Z2i::Domain, unsigned char>::Type MyImage;
 
 
@@ -100,6 +121,8 @@ int main( int argc, char** argv )
     ("help,h", "display this message")
     ("input,i", po::value<std::string>(), "input image file name (any 2D image format accepted by DGtal::GenericReader)")
     ("output,o", po::value<std::string>(), "output image file name (any 2D image format accepted by DGtal::GenericWriter)")
+    ("stdDev", po::value<double>()->default_value(10.0)," <val>: Gaussian noise with std Dev <val>" )
+    ("stdDevSector", po::value<std::vector<double>>()->multitoken(),"<std Dev sector1> <std Dev sector2> <std Dev sector3> <std Dev sector4>: Gaussian noise with std dev defined on each sector" )
     ("noise,n", po::value<double>()->default_value(0.5), "Kanungo noise level in ]0,1[ (default 0.5)")  ;
   
   bool parseOK=true;
@@ -115,6 +138,7 @@ int main( int argc, char** argv )
     {
       trace.info()<< "Add Kanungo noise to a binary object with 0 values "
                   << "as background points and values >0 for the foreground ones."
+                  << "It can also add gaussian or random noise on whole image or on image sectors."
                   <<std::endl << "Basic usage: "<<std::endl
                   << "\t imgAddNoi0se [options] --input <imageName> --output <outputImage>"
                   << "-noise 0.3" <<std::endl
@@ -136,20 +160,63 @@ int main( int argc, char** argv )
   typedef functors::IntervalForegroundPredicate<MyImage> Binarizer;
   MyImage image = GenericReader<MyImage>::import( input );
   trace.info() <<"Input image: "<< image<<std::endl;
-  Binarizer predicate(image, 0,255);
-  
-  
-  KanungoNoise<Binarizer, Z2i::Domain> kanungo(predicate, image.domain(), noise);
-  
   MyImage result(image.domain());
-  for(Z2i::Domain::ConstIterator it = image.domain().begin(), itend = image.domain().end(); it!= itend; ++it)
-  {
-    if (kanungo(*it))
-      result.setValue(*it, 255);
-    else
-      result  .setValue(*it, 0);
-  }
 
+  if(!vm.count("stdDev") && !vm.count("stdDevSector")){
+    Binarizer predicate(image, 0,255); 
+    KanungoNoise<Binarizer, Z2i::Domain> kanungo(predicate, image.domain(), noise);
+    for(Z2i::Domain::ConstIterator it = image.domain().begin(), itend = image.domain().end(); it!= itend; ++it)
+    {
+      if (kanungo(*it))
+        result.setValue(*it, 255);
+      else
+        result.setValue(*it, 0);
+    }
+  }else
+  {
+    double deviation = vm["stdDev"].as<double>(); 
+    double dev1 = deviation;
+    double dev2 = deviation;
+    double dev3 = deviation;
+    double dev4 = deviation;
+    if(vm.count("stdDevSector"))
+    {
+      std::vector<double> devVect = vm["stdDevSector"].as<std::vector<double>>();
+      if(devVect.size()<4)
+      {
+        trace.warning() << "ignoring sector deviation, all 4 sectors need to be filled. (only " << devVect.size() << " given)"  <<std::endl;
+      }else
+      {
+        dev1 = devVect[0];
+        dev2 = devVect[1];
+        dev3 = devVect[2];
+        dev4 = devVect[3];
+      }
+    }      
+    for(Z2i::Domain::ConstIterator it = image.domain().begin(), itend = image.domain().end(); it!= itend; ++it)
+    {
+      unsigned int width = image.domain().upperBound()[0]+1;
+      unsigned int height = image.domain().upperBound()[1]+1;
+
+      auto p = *it;
+      if(vm.count("stdDevSector"))
+      {
+        if((p[0]<width/2) && (p[1]<height/2)){
+        deviation=dev1;	  
+        }else if((p[0]>=width/2)&(p[1]<height/2)){
+          deviation=dev2;	  
+        }else if((p[0]<width/2) && (p[1]>=height/2)){
+          deviation=dev4;	  
+        }else if((p[0]>=width/2)&(p[1]>=height/2)){
+          deviation=dev3;	  
+        }
+      }
+
+      int newVal = (int)(randomGaussien (image(p), deviation));
+      if (newVal < 0){newVal = 0;} 
+      result.setValue(*it, (newVal > 254? 255: newVal)) ;
+    }
+  }    
   result >> output;
   
   return 0;
