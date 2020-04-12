@@ -7,12 +7,22 @@
     Kerautret [#364](https://github.com/DGtal-team/DGtalTools/pull/364))
 
 - *volumetric*
+  - fix ld boost program options macos warnings.
+    Kerautret [#366](https://github.com/DGtal-team/DGtalTools/pull/366))    
   - Passing argument by const reference in (min|max|mean)Val of volSubSample.
     (Roland Denis, [#359](https://github.com/DGtal-team/DGtalTools/pull/359/files))
   - Using SourceForge to download doxygen sources during Travis CI jobs.
     (Roland Denis [#360](https://github.com/DGtal-team/DGtalTools/pull/360))
+  - Fix a wrong error message that appears when using the tool (wrong IO error)
+    (Bertrand Kerautret
+    [#368](https://github.com/DGtal-team/DGtalTools/pull/368))
 
 - *converters*
+  - itk2vol: change type of threshold parameter in order to be able to
+    convert ITK images of type double, it also adds a new option to mask the
+    source image using another image.  (Bertrand Kerautret, -
+    [#367](https://github.com/DGtal-team/DGtalTools/pull/367))
+
   - 3dVolMarchingCubes improved using new Shortcuts helpers.
     (Bertrand Kerautret
     [#370](https://github.com/DGtal-team/DGtalTools/pull/370))
