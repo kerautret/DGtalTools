@@ -86,9 +86,10 @@ void
 applyMaskImage( TImage &imageInput,  const  TImageMask &maskImage,
                 typename TImageMask::Value valRemove)
 {
+  auto srcDom = maskImage.domain();
   for(const auto &p : imageInput.domain())
   {
-    if (maskImage(p) == valRemove)
+    if (!srcDom.isInside(p) || maskImage(p) == valRemove)
     {
       imageInput.setValue(p,0);
     }
