@@ -42,7 +42,8 @@ ENDFOREACH(FILE)
 if (  WITH_ITK )
   SET(DGTAL_TOOLS_ITK
     dicom2vol
-    itk2vol)
+    itk2vol
+    vol2itk)
   FOREACH(FILE ${DGTAL_TOOLS_ITK})
      add_executable(${FILE} ${FILE})
      target_link_libraries (${FILE} ${DGTAL_LIBRARIES} ${DGtalToolsLibDependencies} )
