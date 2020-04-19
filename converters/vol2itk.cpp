@@ -119,7 +119,7 @@ int main( int argc, char** argv )
   string outputFilename = vm["output"].as<std::string>();
   Image3D inputImage = DGtal::GenericReader<Image3D>::import(inputFilename);
 
-  DGtal::ITKWriter<Image3D_D>::exportITK (outputFilename, inputImage);
+  DGtal::ITKWriter<Image3D>::exportITK (outputFilename, inputImage);
   
   
 
