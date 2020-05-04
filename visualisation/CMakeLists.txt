@@ -4,6 +4,7 @@ SET(DGTAL_TOOLS_SRC
         3dCurvatureViewer
         3dCurvatureViewerNoise
         2dCompImage
+        volMip        
 )
 
 foreach (FILE ${DGTAL_TOOLS_SRC})
