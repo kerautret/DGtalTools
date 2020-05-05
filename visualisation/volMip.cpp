@@ -141,6 +141,7 @@ int main( int argc, char** argv )
   ("input,i", po::value<std::string>(), "vol file (.vol, .longvol .p3d, .pgm3d and if WITH_ITK is selected: dicom, dcm, mha, mhd). For longvol, dicom, dcm, mha or mhd formats, the input values are linearly scaled between 0 and 255." )
   ("autoDisplay,a", "auto set the display settings (center point of the volume, and camera direction). " )
   ("output,o", po::value<std::string>(), "sequence of discrete point file (.sdp) ")
+  ("inputType,t", po::value<std::string>()->default_value("int"), "to sepcify the input image type (int or double)." )
   ("thresholdMin,m", po::value<int>()->default_value(0), "min threshold (default 128)" )
   ("thresholdMax,M", po::value<int>()->default_value(255), "max threshold (default 255)" )
   ("nx", po::value<double>()->default_value(0), "set the x component of the projection direction." )
@@ -153,8 +154,8 @@ int main( int argc, char** argv )
   ("height", po::value<unsigned int>()->default_value(100), "set the height of the resulting height Field image." )
   ("heightFieldMaxScan", po::value<unsigned int>()->default_value(255), "set the maximal scan deep." )
   ("setBackgroundLastDepth", "change the default background (black with the last filled intensity).")
-  ("rescaleInputMin", po::value<DGtal::int64_t>()->default_value(0), "min value used to rescale the input intensity (to avoid basic cast into 8  bits image).")
-  ("rescaleInputMax", po::value<DGtal::int64_t>()->default_value(255), "max value used to rescale the input intensity (to avoid basic cast into 8 bits image).");
+  ("rescaleInputMin", po::value<double>()->default_value(0), "min value used to rescale the input intensity (to avoid basic cast into 8  bits image).")
+  ("rescaleInputMax", po::value<double>()->default_value(255), "max value used to rescale the input intensity (to avoid basic cast into 8 bits image).");
   
   
   
@@ -182,20 +183,31 @@ int main( int argc, char** argv )
     trace.error() << " Input and output filename are needed to be defined" << endl;
     return 0;
   }
-  
+  string inputType = vm["inputType"].as<std::string>();
+
   string inputFilename = vm["input"].as<std::string>();
   string outputFilename = vm["output"].as<std::string>();
-  DGtal::int64_t rescaleInputMin = vm["rescaleInputMin"].as<DGtal::int64_t>();
-  DGtal::int64_t rescaleInputMax = vm["rescaleInputMax"].as<DGtal::int64_t>();
+  double rescaleInputMin = vm["rescaleInputMin"].as<double>();
+  double rescaleInputMax = vm["rescaleInputMax"].as<double>();
   
   trace.info() << "Reading input file " << inputFilename ;
   
-  typedef DGtal::functors::Rescaling<DGtal::int64_t ,unsigned char > RescalFCT;
-  Image3D inputImage =  GenericReader< Image3D >::importWithValueFunctor( inputFilename,RescalFCT(rescaleInputMin,
-                                                                                                  rescaleInputMax,
-                                                                                                  0, 255) );
+  typedef DGtal::functors::Rescaling<double ,unsigned char > RescalFCTd;
+  typedef DGtal::functors::Rescaling<int64_t ,unsigned char > RescalFCT;
   
-  
+  Image3D inputImage (Z3i::Domain(Z3i::Point(0,0,0), Z3i::Point(1,1,1))) ;
+  if (inputType=="double"){
+    inputImage =  GenericReader< Image3D >::importWithValueFunctor( inputFilename,
+                                                                          RescalFCTd(rescaleInputMin,
+                                                                                     rescaleInputMax,
+                                                                                     0, 255) );
+  }else {
+    inputImage =  GenericReader< Image3D >::importWithValueFunctor( inputFilename,
+                                                                             RescalFCT(rescaleInputMin,
+                                                                                        rescaleInputMax,
+                                                                                        0, 255) );
+  }
+
   trace.info() << " [done] " << std::endl ;
   
   std::ofstream outStream;
