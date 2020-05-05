@@ -239,16 +239,15 @@ int main( int argc, char** argv )
   
   if (vm.count("autoDisplay"))
   {
-    auto domC = (inputImage.domain().upperBound() - inputImage.domain().lowerBound())/2;
-    auto d = std::max(inputImage.domain().upperBound().norm(), inputImage.domain().lowerBound().norm())*2.0;
-    normalDir = (domC - Z3i::Point(d,d,d)).getNormalized();
+    auto domC = (inputImage.domain().upperBound() + inputImage.domain().lowerBound())/2;
+    normalDir = (domC - inputImage.domain().upperBound()).getNormalized();
     auto dx = inputImage.domain().upperBound()[0] - inputImage.domain().lowerBound()[0];
     auto dy = inputImage.domain().upperBound()[1] - inputImage.domain().lowerBound()[1];
     auto dz = inputImage.domain().upperBound()[2] - inputImage.domain().lowerBound()[2];
     auto maxDim = std::max(dx, std::max(dz, dy));
-    maxScan = 2.0*d;
+    maxScan = (inputImage.domain().upperBound() - inputImage.domain().lowerBound()).norm();
     aDomain2D = Image2D::Domain(DGtal::Z2i::Point(-maxDim, -maxDim), DGtal::Z2i::Point(maxDim, maxDim));
-    ptCenter = Z3i::Point(d,d,d);
+    ptCenter = inputImage.domain().upperBound();
   }
   Image2D resultingImage(aDomain2D);
   trace.info() << "Processing input with center" << ptCenter << "in direction: "<< normalDir
