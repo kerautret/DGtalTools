@@ -139,7 +139,7 @@ int main( int argc, char** argv )
   general_opt.add_options()
   ("help,h", "display this message")
   ("input,i", po::value<std::string>(), "vol file (.vol, .longvol .p3d, .pgm3d and if WITH_ITK is selected: dicom, dcm, mha, mhd). For longvol, dicom, dcm, mha or mhd formats, the input values are linearly scaled between 0 and 255." )
-  ("autoDisplay,a", "auto set the display settings (center point of the volume, and camera direction). " )
+  ("autoDisplay,a", po::value<double>()->default_value(1.0), "auto set the display settings (center point of the volume, and camera direction) and set zoom ajustement (by default 1.0 set > 1.0 to enlarge the view). " )
   ("output,o", po::value<std::string>(), "sequence of discrete point file (.sdp) ")
   ("inputType,t", po::value<std::string>()->default_value("int"), "to sepcify the input image type (int or double)." )
   ("thresholdMin,m", po::value<int>()->default_value(0), "min threshold (default 128)" )
@@ -239,14 +239,16 @@ int main( int argc, char** argv )
   
   if (vm.count("autoDisplay"))
   {
+    auto coefZoom = vm["autoDisplay"].as<double>();
     auto domC = (inputImage.domain().upperBound() + inputImage.domain().lowerBound())/2;
     normalDir = (domC - inputImage.domain().upperBound()).getNormalized();
     auto dx = inputImage.domain().upperBound()[0] - inputImage.domain().lowerBound()[0];
     auto dy = inputImage.domain().upperBound()[1] - inputImage.domain().lowerBound()[1];
     auto dz = inputImage.domain().upperBound()[2] - inputImage.domain().lowerBound()[2];
     auto maxDim = std::max(dx, std::max(dz, dy));
+    widthImageScan = maxDim*coefZoom;
     maxScan = (inputImage.domain().upperBound() - inputImage.domain().lowerBound()).norm();
-    aDomain2D = Image2D::Domain(DGtal::Z2i::Point(-maxDim, -maxDim), DGtal::Z2i::Point(maxDim, maxDim));
+    aDomain2D = Image2D::Domain(DGtal::Z2i::Point(0, 0), DGtal::Z2i::Point(maxDim*coefZoom, maxDim*coefZoom));
     ptCenter = inputImage.domain().upperBound();
   }
   Image2D resultingImage(aDomain2D);
