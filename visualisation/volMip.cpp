@@ -55,10 +55,10 @@ namespace po = boost::program_options;
 
 
 /**
- @page vol2heightfield vol2heightfield
- @brief  Converts volumetric  file into a projected 2D image given from a normal direction N and from a starting point P.
+ @page volMip volMip
+ @brief Generates a Maximum Intensity Image from a volumetric image file.
  
- The 3D volume is scanned in this normal direction N starting from P with a step 1. If the intensity of the 3d point is inside the given thresholds its 2D gray values are set to the current scan number.
+ The 3D volume is scanned in this normal direction N starting from P with a step 1.  The intensity value of each pixel is given by the maximal value on the ray.
  
  
  @b Usage: vol2heightfield [input] [output]
@@ -115,6 +115,7 @@ namespace po = boost::program_options;
 
 typedef ImageContainerBySTLVector < Z3i::Domain, unsigned char > Image3D;
 typedef ImageContainerBySTLVector < Z2i::Domain, unsigned char> Image2D;
+typedef ImageContainerBySTLVector < Z2i::Domain, double> Image2Dd;
 
 
 
@@ -142,8 +143,8 @@ int main( int argc, char** argv )
   ("autoDisplay,a", po::value<double>()->default_value(1.0), "auto set the display settings (center point of the volume, and camera direction) and set zoom ajustement (by default 1.0 set > 1.0 to enlarge the view). " )
   ("output,o", po::value<std::string>(), "sequence of discrete point file (.sdp) ")
   ("inputType,t", po::value<std::string>()->default_value("int"), "to sepcify the input image type (int or double)." )
-  ("thresholdMin,m", po::value<int>()->default_value(0), "min threshold (default 128)" )
-  ("thresholdMax,M", po::value<int>()->default_value(255), "max threshold (default 255)" )
+  ("thresholdMin,m", po::value<int>(), "min threshold" )
+  ("thresholdMax,M", po::value<int>(), "max threshold" )
   ("nx", po::value<double>()->default_value(0), "set the x component of the projection direction." )
   ("ny", po::value<double>()->default_value(0), "set the y component of the projection direction." )
   ("nz", po::value<double>()->default_value(1), "set the z component of the projection direction." )
@@ -174,7 +175,7 @@ int main( int argc, char** argv )
     << "Convert volumetric  file into a projected 2D image given from a normal direction N and from a starting point P. The 3D volume is scanned in this normal direction N starting from P with a step 1. If the intensity of the 3d point is inside the given thresholds its 2D gray values are set to the current scan number."
     << general_opt << "\n";
     std::cout << "Example:\n"
-    << "vol2heightfield -i ${DGtal}/examples/samples/lobster.vol -m 60 -M 500  --nx 0 --ny 0.7 --nz -1 -x 150 -y 0 -z 150 --width 300 --height 300 --heightFieldMaxScan 350  -o resultingHeightMap.pgm \n";
+    << "volMip -i ${DGtal}/examples/samples/lobster.vol -m 60 -M 500  --nx 0 --ny 0.7 --nz -1 -x 150 -y 0 -z 150 --width 300 --height 300 --heightFieldMaxScan 350  -o mipView.pgm \n";
     return 0;
   }
   
@@ -185,8 +186,24 @@ int main( int argc, char** argv )
   }
   string inputType = vm["inputType"].as<std::string>();
 
+  bool thresholdMin = vm.count("thresholdMin");
+  bool thresholdMax = vm.count("thresholdMax");
+
   string inputFilename = vm["input"].as<std::string>();
   string outputFilename = vm["output"].as<std::string>();
+  int minTh = 0;
+  int maxTh = 0;
+  
+  if (thresholdMin)
+  {
+     minTh = vm["rescaleInputMin"].as<int>();
+  }
+  if (thresholdMax)
+  {
+     maxTh = vm["rescaleInputMax"].as<int>();
+  }
+
+  
   double rescaleInputMin = vm["rescaleInputMin"].as<double>();
   double rescaleInputMax = vm["rescaleInputMax"].as<double>();
   
@@ -194,29 +211,26 @@ int main( int argc, char** argv )
   
   typedef DGtal::functors::Rescaling<double ,unsigned char > RescalFCTd;
   typedef DGtal::functors::Rescaling<int64_t ,unsigned char > RescalFCT;
-  
+  typedef DGtal::functors::Rescaling<unsigned char ,unsigned char > RescalFCTc;
+
   Image3D inputImage (Z3i::Domain(Z3i::Point(0,0,0), Z3i::Point(1,1,1))) ;
   if (inputType=="double"){
     inputImage =  GenericReader< Image3D >::importWithValueFunctor( inputFilename,
-                                                                          RescalFCTd(rescaleInputMin,
-                                                                                     rescaleInputMax,
-                                                                                     0, 255) );
+                                                                    RescalFCTd(rescaleInputMin,
+                                                                                rescaleInputMax,
+                                                                                 0, 255) );
   }else {
     inputImage =  GenericReader< Image3D >::importWithValueFunctor( inputFilename,
-                                                                             RescalFCT(rescaleInputMin,
-                                                                                        rescaleInputMax,
-                                                                                        0, 255) );
+                                                                     RescalFCT(rescaleInputMin,
+                                                                               rescaleInputMax,
+                                                                               0, 255) );
   }
 
   trace.info() << " [done] " << std::endl ;
-  
   std::ofstream outStream;
   outStream.open(outputFilename.c_str());
-  int minTh = vm["thresholdMin"].as<int>();
-  int maxTh = vm["thresholdMax"].as<int>();
-  
   trace.info() << "Processing image to output file " << outputFilename << std::endl;
-  
+
   unsigned int widthImageScan = vm["height"].as<unsigned int>();
   unsigned int heightImageScan = vm["width"].as<unsigned int>();
   unsigned int maxScan = vm["heightFieldMaxScan"].as<unsigned int>();
@@ -261,6 +275,9 @@ int main( int argc, char** argv )
   DGtal::functors::Identity idV;
   
   unsigned int maxDepthFound = 0;
+  auto valueMin = inputImage(*inputImage.domain().begin());
+  auto valueMax = inputImage(*inputImage.domain().begin());
+  
   for(unsigned int k=0; k < maxScan; k++){
     Z3i::Point c (ptCenter+normalDir*k, DGtal::functors::Round<>());
     DGtal::functors::Point2DEmbedderIn3D<DGtal::Z3i::Domain >  embedder(inputImage.domain(),
@@ -270,22 +287,26 @@ int main( int argc, char** argv )
     ImageAdapterExtractor extractedImage(inputImage, aDomain2D, embedder, idV);
     for(Image2D::Domain::ConstIterator it = extractedImage.domain().begin();
         it != extractedImage.domain().end(); it++){
-      if(extractedImage(*it) < maxTh &&
-         extractedImage(*it) > minTh){
+      if((!thresholdMin ||  extractedImage(*it) > minTh) &&
+         (!thresholdMax ||  extractedImage(*it) < maxTh))
+      {
         if(extractedImage(*it)>resultingImage(*it) )
         {
           resultingImage.setValue(*it, extractedImage(*it));
+          valueMin = std::min(extractedImage(*it), valueMin);
+          valueMax = std::max(extractedImage(*it), valueMax);
         }
       }
     }
   }
   
-  resultingImage >> outputFilename;
+  GenericWriter< Image2D, 2, unsigned char,RescalFCTc >::exportFile( outputFilename,
+                                                                    resultingImage,
+                                                                    RescalFCTc(valueMin,
+                                                                               valueMax, 0, 255) );
+  
   
   trace.info() << " [done] " << std::endl ;
   return 0;
 }
-
-
-
 
