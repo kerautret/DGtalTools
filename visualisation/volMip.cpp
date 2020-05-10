@@ -37,6 +37,9 @@
 #include "DGtal/images/ConstImageAdapter.h"
 #include "DGtal/kernel/BasicPointFunctors.h"
 
+#include "DGtal/io/colormaps/GradientColorMap.h"
+#include "DGtal/base/BasicFunctors.h"
+
 
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/parsers.hpp>
@@ -61,7 +64,7 @@ namespace po = boost::program_options;
  The 3D volume is scanned in this normal direction N starting from P with a step 1.  The intensity value of each pixel is given by the maximal value on the ray.
  
  
- @b Usage: vol2heightfield [input] [output]
+ @b Usage: volMip [input] [output]
  
  @b Allowed @b options @b are:
  
@@ -88,7 +91,7 @@ namespace po = boost::program_options;
  image.
  --height arg (=100)              set the height of the resulting height Field
  image.
- --heightFieldMaxScan arg (=255)  set the maximal scan deep.
+ --maxScan arg (=255)  set the maximal scan deep.
  --setBackgroundLastDepth         change the default background (black with
  the last filled intensity).
  --rescaleInputMin arg (=0)       min value used to rescale the input
@@ -103,31 +106,45 @@ namespace po = boost::program_options;
  
  @b Example:
  @code
- $ vol2heightfield -i ${DGtal}/examples/samples/lobster.vol -m 60 -M 500  --nx 0 --ny 0.7 --nz -1 -x 150 -y 0 -z 150 --width 300 --height 300 --heightFieldMaxScan 350  -o resultingHeightMap.pgm
+ $ volMip -i ${DGtal}/examples/samples/lobster.vol -m 60 -M 500  --nx 0 --ny 0.7 --nz -1 -x 150 -y 0 -z 150 --width 300 --height 300 --maxScan 350  -o resultingHeightMap.pgm
  @endcode
  
  You should obtain such a resulting image:
  @image html resVol2heightfield.png "resulting image."
  @see
- @ref vol2heightfield.cpp
+ @ref volMip.cpp
  
  */
+
 
 typedef ImageContainerBySTLVector < Z3i::Domain, unsigned char > Image3D;
 typedef ImageContainerBySTLVector < Z2i::Domain, unsigned char> Image2D;
 typedef ImageContainerBySTLVector < Z2i::Domain, double> Image2Dd;
 
 
-
 void
 mapProject(const Image3D &inputImage, Image2D &proj){
-  
   
   
 }
 
 
-
+ColorGradientPreset getPreset(std::string p) {
+  static const std::map<std::string, ColorGradientPreset> cmap {
+        { "cool", ColorGradientPreset::CMAP_COOL },
+        { "hot", ColorGradientPreset::CMAP_HOT },
+        { "jet", ColorGradientPreset::CMAP_JET },
+        { "cooper", ColorGradientPreset::CMAP_COPPER },
+        { "spring", ColorGradientPreset::CMAP_SPRING },
+        { "winter", ColorGradientPreset::CMAP_WINTER },
+        { "viridis", ColorGradientPreset::CMAP_VIRIDIS }
+     };
+  auto it = cmap.find(p);
+  if( it != cmap.end() ) {
+    return (*it).second;
+  }
+  return ColorGradientPreset::CMAP_CUSTOM;
+}
 
 
 int main( int argc, char** argv )
@@ -145,15 +162,16 @@ int main( int argc, char** argv )
   ("inputType,t", po::value<std::string>()->default_value("int"), "to sepcify the input image type (int or double)." )
   ("thresholdMin,m", po::value<int>(), "min threshold" )
   ("thresholdMax,M", po::value<int>(), "max threshold" )
+  ("colorMapRendering",po::value<string>(), "apply a color map rendering (spring, cooper, jet, hot, cool")
   ("nx", po::value<double>()->default_value(0), "set the x component of the projection direction." )
   ("ny", po::value<double>()->default_value(0), "set the y component of the projection direction." )
   ("nz", po::value<double>()->default_value(1), "set the z component of the projection direction." )
-  ("centerX,x", po::value<unsigned int>()->default_value(0), "choose x center of the projected image." )
-  ("centerY,y", po::value<unsigned int>()->default_value(0), "choose y center of the projected image." )
-  ("centerZ,z", po::value<unsigned int>()->default_value(1), "choose z center of the projected image." )
-  ("width", po::value<unsigned int>()->default_value(100), "set the width of the resulting height Field image." )
-  ("height", po::value<unsigned int>()->default_value(100), "set the height of the resulting height Field image." )
-  ("heightFieldMaxScan", po::value<unsigned int>()->default_value(255), "set the maximal scan deep." )
+  ("centerX,x", po::value<unsigned int>()->default_value(0), "choose x center of the first projected image." )
+  ("centerY,y", po::value<unsigned int>()->default_value(0), "choose y center of the first projected image." )
+  ("centerZ,z", po::value<unsigned int>()->default_value(1), "choose z center of the first projected image." )
+  ("width", po::value<unsigned int>()->default_value(100), "set the width of the resulting MIP rendering." )
+  ("height", po::value<unsigned int>()->default_value(100), "set the height of the resulting MIP rendering." )
+  ("maxScan", po::value<unsigned int>()->default_value(255), "set the maximal scan deep of a ray." )
   ("setBackgroundLastDepth", "change the default background (black with the last filled intensity).")
   ("rescaleInputMin", po::value<double>()->default_value(0), "min value used to rescale the input intensity (to avoid basic cast into 8  bits image).")
   ("rescaleInputMax", po::value<double>()->default_value(255), "max value used to rescale the input intensity (to avoid basic cast into 8 bits image).");
@@ -175,7 +193,7 @@ int main( int argc, char** argv )
     << "Convert volumetric  file into a projected 2D image given from a normal direction N and from a starting point P. The 3D volume is scanned in this normal direction N starting from P with a step 1. If the intensity of the 3d point is inside the given thresholds its 2D gray values are set to the current scan number."
     << general_opt << "\n";
     std::cout << "Example:\n"
-    << "volMip -i ${DGtal}/examples/samples/lobster.vol -m 60 -M 500  --nx 0 --ny 0.7 --nz -1 -x 150 -y 0 -z 150 --width 300 --height 300 --heightFieldMaxScan 350  -o mipView.pgm \n";
+    << "volMip -i ${DGtal}/examples/samples/lobster.vol -m 60 -M 500  --nx 0 --ny 0.7 --nz -1 -x 150 -y 0 -z 150 --width 300 --height 300 --maxScan 350  -o mipView.pgm \n";
     return 0;
   }
   
@@ -185,23 +203,22 @@ int main( int argc, char** argv )
     return 0;
   }
   string inputType = vm["inputType"].as<std::string>();
-
-  bool thresholdMin = vm.count("thresholdMin");
-  bool thresholdMax = vm.count("thresholdMax");
-
-  string inputFilename = vm["input"].as<std::string>();
-  string outputFilename = vm["output"].as<std::string>();
   int minTh = 0;
   int maxTh = 0;
-  
+  bool thresholdMin = vm.count("thresholdMin");
+  bool thresholdMax = vm.count("thresholdMax");
   if (thresholdMin)
-  {
-     minTh = vm["rescaleInputMin"].as<int>();
-  }
-  if (thresholdMax)
-  {
-     maxTh = vm["rescaleInputMax"].as<int>();
-  }
+   {
+      minTh = vm["thresholdMin"].as<int>();
+   }
+   if (thresholdMax)
+   {
+      maxTh = vm["thresholdMax"].as<int>();
+   }
+  
+  string inputFilename = vm["input"].as<std::string>();
+  string outputFilename = vm["output"].as<std::string>();
+   
 
   
   double rescaleInputMin = vm["rescaleInputMin"].as<double>();
@@ -233,7 +250,7 @@ int main( int argc, char** argv )
 
   unsigned int widthImageScan = vm["height"].as<unsigned int>();
   unsigned int heightImageScan = vm["width"].as<unsigned int>();
-  unsigned int maxScan = vm["heightFieldMaxScan"].as<unsigned int>();
+  unsigned int maxScan = vm["maxScan"].as<unsigned int>();
   if(maxScan > std::numeric_limits<Image2D::Value>::max()){
     maxScan = std::numeric_limits<Image2D::Value>::max();
     trace.warning()<< "value --setBackgroundLastDepth outside mox value of image. Set to max value:" << maxScan << std::endl;
@@ -300,12 +317,21 @@ int main( int argc, char** argv )
     }
   }
   
-  GenericWriter< Image2D, 2, unsigned char,RescalFCTc >::exportFile( outputFilename,
-                                                                    resultingImage,
-                                                                    RescalFCTc(valueMin,
-                                                                               valueMax, 0, 255) );
-  
-  
+  if (vm.count("colorMapRendering"))
+  {
+    string gradType = vm["colorMapRendering"].as<string>();
+    DGtal::GradientColorMap<double>  gradMap (valueMin, valueMax, getPreset(gradType));
+    DGtal::GenericWriter<Image2D, 2, double, DGtal::GradientColorMap<double>>::exportFile(outputFilename,       resultingImage, gradMap );
+  }
+  else
+  {
+    GenericWriter< Image2D, 2, unsigned char,RescalFCTc >::exportFile( outputFilename,
+                                                                      resultingImage,
+                                                                      RescalFCTc(valueMin,
+                                                                                 valueMax, 0, 255) );
+    
+    
+  }
   trace.info() << " [done] " << std::endl ;
   return 0;
 }
