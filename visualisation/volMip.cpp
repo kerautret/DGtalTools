@@ -120,6 +120,7 @@ namespace po = boost::program_options;
 
 
 typedef ImageContainerBySTLVector < Z3i::Domain, unsigned char > Image3D;
+typedef ImageContainerBySTLVector < Z3i::Domain, double > Image3Dd;
 typedef ImageContainerBySTLVector < Z2i::Domain, unsigned char> Image2D;
 typedef ImageContainerBySTLVector < Z2i::Domain, double> Image2Dd;
 typedef DGtal::ConstImageAdapter<Image3D, Z2i::Domain, DGtal::functors::Point2DEmbedderIn3D<DGtal::Z3i::Domain>,
@@ -183,7 +184,8 @@ ColorGradientPreset getPreset(std::string p) {
         { "jet", ColorGradientPreset::CMAP_JET },
         { "cooper", ColorGradientPreset::CMAP_COPPER },
         { "spring", ColorGradientPreset::CMAP_SPRING },
-        { "winter", ColorGradientPreset::CMAP_WINTER }
+        { "winter", ColorGradientPreset::CMAP_WINTER },
+        { "viridis", ColorGradientPreset::CMAP_VIRIDIS }
      };
   auto it = cmap.find(p);
   if( it != cmap.end() ) {
@@ -203,8 +205,8 @@ exportImageWithGrad(const TImage &image, string gradType, string outputFilename 
   auto minMax = std::minmax_element(image.constRange().begin(), image.constRange().end());
   typename TImage::Value  valueMin = *(minMax.first);
    typename TImage::Value valueMax = *(minMax.second);
-      DGtal::HueShadeColorMap<typename TImage::Value> gradMap (valueMin, valueMax);
-    DGtal::GenericWriter<TImage, 2, DGtal::Color, DGtal::HueShadeColorMap<typename TImage::Value> >::exportFile(outputFilename, image, gradMap );
+    DGtal::GradientColorMap <typename TImage::Value> gradMap (valueMin, valueMax, getPreset(gradType));
+    DGtal::GenericWriter<TImage, 2, DGtal::Color, DGtal::GradientColorMap <typename TImage::Value> >::exportFile(outputFilename, image, gradMap );
    
 
   
@@ -224,6 +226,7 @@ int main( int argc, char** argv )
   ("autoDisplay,a", po::value<double>()->default_value(1.0), "auto set the display settings (center point of the volume, and camera direction) and set zoom ajustement (by default 1.0 set > 1.0 to enlarge the view). " )
   ("output,o", po::value<std::string>(), "sequence of discrete point file (.sdp) ")
   ("inputType,t", po::value<std::string>()->default_value("int"), "to sepcify the input image type (int or double)." )
+  ("inputAutoRescale", "used to auto rescale the source image value of type double (rescaleInputMin and rescaleInputMax are updated from the max/min image values)." )
   ("thresholdMin,m", po::value<int>(), "min threshold" )
   ("thresholdMax,M", po::value<int>(), "max threshold" )
   ("colorMapRendering",po::value<string>(), "apply a color map rendering (spring, cooper, jet, hot, cool")
@@ -296,6 +299,16 @@ int main( int argc, char** argv )
 
   Image3D inputImage (Z3i::Domain(Z3i::Point(0,0,0), Z3i::Point(1,1,1))) ;
   if (inputType=="double"){
+ 
+    if (vm.count("inputAutoRescale"))
+    {
+      //Load source to update the min/max values
+      Image3Dd im  = GenericReader<Image3Dd>::import(inputFilename);
+      rescaleInputMin = *(std::min_element(im.constRange().begin(), im.constRange().end()));
+      rescaleInputMax = *(std::max_element(im.constRange().begin(), im.constRange().end()));
+      trace.info() << "updating min/max rescaling value with the following values: \n"
+                   << "\t max :" << rescaleInputMax << "\n\t min: " << rescaleInputMin << std::endl;
+    }
     inputImage =  GenericReader< Image3D >::importWithValueFunctor( inputFilename,
                                                                     RescalFCTd(rescaleInputMin,
                                                                                 rescaleInputMax,
