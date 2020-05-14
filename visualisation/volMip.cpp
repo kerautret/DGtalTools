@@ -29,6 +29,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include <iostream>
 #include <fstream>
+#include <algorithm>
+
 #include "DGtal/base/Common.h"
 #include "DGtal/helpers/StdDefs.h"
 #include "DGtal/images/ImageContainerBySTLVector.h"
@@ -118,15 +120,61 @@ namespace po = boost::program_options;
 
 
 typedef ImageContainerBySTLVector < Z3i::Domain, unsigned char > Image3D;
+typedef ImageContainerBySTLVector < Z3i::Domain, double > Image3Dd;
 typedef ImageContainerBySTLVector < Z2i::Domain, unsigned char> Image2D;
 typedef ImageContainerBySTLVector < Z2i::Domain, double> Image2Dd;
+typedef DGtal::ConstImageAdapter<Image3D, Z2i::Domain, DGtal::functors::Point2DEmbedderIn3D<DGtal::Z3i::Domain>,
+Image3D::Value,  DGtal::functors::Identity >  ImageAdapterExtractor;
 
 
-void
-mapProject(const Image3D &inputImage, Image2D &proj){
+
+template<typename ImageT>
+Image2D
+mapProject(const ImageT &inputImage, unsigned int maxScan,
+           Z3i::Point ptCenter, Z3i::RealPoint normalDir, unsigned int widthImageScan,
+           const Z2i::Domain &aDomain2D, bool thresholdMin=false, bool thresholdMax=false,
+           typename ImageT::Value minTh=0, typename ImageT::Value maxTh=0 ){
+  Image2D resultingImage(aDomain2D);
+  trace.info() << "Processing input with center" << ptCenter << "in direction: "<< normalDir
+                << " max scan:" << maxScan << std::endl;
+   for(Image2D::Domain::ConstIterator it = resultingImage.domain().begin();
+       it != resultingImage.domain().end(); it++){
+     resultingImage.setValue(*it, 0);
+   }
+   
   
-  
+  trace.info() << "Processing input with center" << ptCenter << "in direction: "<< normalDir
+                << " max scan:" << maxScan << std::endl;
+   for(Image2D::Domain::ConstIterator it = resultingImage.domain().begin();
+       it != resultingImage.domain().end(); it++){
+     resultingImage.setValue(*it, 0);
+   }
+   
+  DGtal::functors::Identity idV;
+   unsigned int maxDepthFound = 0;
+    
+   for(unsigned int k=0; k < maxScan; k++){
+     Z3i::Point c (ptCenter+normalDir*k, DGtal::functors::Round<>());
+     DGtal::functors::Point2DEmbedderIn3D<DGtal::Z3i::Domain >  embedder(inputImage.domain(),
+                                                                         c,
+                                                                         normalDir,
+                                                                         widthImageScan);
+     ImageAdapterExtractor extractedImage(inputImage, aDomain2D, embedder, idV);
+     for(Image2D::Domain::ConstIterator it = extractedImage.domain().begin();
+         it != extractedImage.domain().end(); it++){
+       if((!thresholdMin ||  extractedImage(*it) > minTh) &&
+          (!thresholdMax ||  extractedImage(*it) < maxTh))
+       {
+         if(extractedImage(*it)>=resultingImage(*it) )
+         {
+           resultingImage.setValue(*it, extractedImage(*it));
+         }
+       }
+     }
+   }
+  return resultingImage;
 }
+
 
 
 ColorGradientPreset getPreset(std::string p) {
@@ -147,10 +195,28 @@ ColorGradientPreset getPreset(std::string p) {
 }
 
 
+
+
+
+template<typename TImage>
+void
+exportImageWithGrad(const TImage &image, string gradType, string outputFilename )
+{
+  auto minMax = std::minmax_element(image.constRange().begin(), image.constRange().end());
+  typename TImage::Value  valueMin = *(minMax.first);
+   typename TImage::Value valueMax = *(minMax.second);
+    DGtal::GradientColorMap <typename TImage::Value> gradMap (valueMin, valueMax, getPreset(gradType));
+    DGtal::GenericWriter<TImage, 2, DGtal::Color, DGtal::GradientColorMap <typename TImage::Value> >::exportFile(outputFilename, image, gradMap );
+   
+
+  
+}
+
+
+
+
 int main( int argc, char** argv )
 {
-  typedef DGtal::ConstImageAdapter<Image3D, Z2i::Domain, DGtal::functors::Point2DEmbedderIn3D<DGtal::Z3i::Domain>,
-  Image3D::Value,  DGtal::functors::Identity >  ImageAdapterExtractor;
   
   // parse command line ----------------------------------------------
   po::options_description general_opt("Allowed options are: ");
@@ -160,6 +226,7 @@ int main( int argc, char** argv )
   ("autoDisplay,a", po::value<double>()->default_value(1.0), "auto set the display settings (center point of the volume, and camera direction) and set zoom ajustement (by default 1.0 set > 1.0 to enlarge the view). " )
   ("output,o", po::value<std::string>(), "sequence of discrete point file (.sdp) ")
   ("inputType,t", po::value<std::string>()->default_value("int"), "to sepcify the input image type (int or double)." )
+  ("inputAutoRescale", "used to auto rescale the source image value of type double (rescaleInputMin and rescaleInputMax are updated from the max/min image values)." )
   ("thresholdMin,m", po::value<int>(), "min threshold" )
   ("thresholdMax,M", po::value<int>(), "max threshold" )
   ("colorMapRendering",po::value<string>(), "apply a color map rendering (spring, cooper, jet, hot, cool")
@@ -232,6 +299,16 @@ int main( int argc, char** argv )
 
   Image3D inputImage (Z3i::Domain(Z3i::Point(0,0,0), Z3i::Point(1,1,1))) ;
   if (inputType=="double"){
+ 
+    if (vm.count("inputAutoRescale"))
+    {
+      //Load source to update the min/max values
+      Image3Dd im  = GenericReader<Image3Dd>::import(inputFilename);
+      rescaleInputMin = *(std::min_element(im.constRange().begin(), im.constRange().end()));
+      rescaleInputMax = *(std::max_element(im.constRange().begin(), im.constRange().end()));
+      trace.info() << "updating min/max rescaling value with the following values: \n"
+                   << "\t max :" << rescaleInputMax << "\n\t min: " << rescaleInputMin << std::endl;
+    }
     inputImage =  GenericReader< Image3D >::importWithValueFunctor( inputFilename,
                                                                     RescalFCTd(rescaleInputMin,
                                                                                 rescaleInputMax,
@@ -282,55 +359,24 @@ int main( int argc, char** argv )
     aDomain2D = Image2D::Domain(DGtal::Z2i::Point(0, 0), DGtal::Z2i::Point(maxDim*coefZoom, maxDim*coefZoom));
     ptCenter = inputImage.domain().upperBound();
   }
-  Image2D resultingImage(aDomain2D);
-  trace.info() << "Processing input with center" << ptCenter << "in direction: "<< normalDir
-               << " max scan:" << maxScan << std::endl;
-  for(Image2D::Domain::ConstIterator it = resultingImage.domain().begin();
-      it != resultingImage.domain().end(); it++){
-    resultingImage.setValue(*it, 0);
-  }
-  DGtal::functors::Identity idV;
   
-  unsigned int maxDepthFound = 0;
-  auto valueMin = inputImage(*inputImage.domain().begin());
-  auto valueMax = inputImage(*inputImage.domain().begin());
-  
-  for(unsigned int k=0; k < maxScan; k++){
-    Z3i::Point c (ptCenter+normalDir*k, DGtal::functors::Round<>());
-    DGtal::functors::Point2DEmbedderIn3D<DGtal::Z3i::Domain >  embedder(inputImage.domain(),
-                                                                        c,
-                                                                        normalDir,
-                                                                        widthImageScan);
-    ImageAdapterExtractor extractedImage(inputImage, aDomain2D, embedder, idV);
-    for(Image2D::Domain::ConstIterator it = extractedImage.domain().begin();
-        it != extractedImage.domain().end(); it++){
-      if((!thresholdMin ||  extractedImage(*it) > minTh) &&
-         (!thresholdMax ||  extractedImage(*it) < maxTh))
-      {
-        if(extractedImage(*it)>resultingImage(*it) )
-        {
-          resultingImage.setValue(*it, extractedImage(*it));
-          valueMin = std::min(extractedImage(*it), valueMin);
-          valueMax = std::max(extractedImage(*it), valueMax);
-        }
-      }
-    }
-  }
-  
+  Image2D resultingImage = mapProject(inputImage,   maxScan, ptCenter, normalDir, widthImageScan,
+                                      aDomain2D, thresholdMin, thresholdMax, minTh, maxTh);
+             
+
   if (vm.count("colorMapRendering"))
   {
-    string gradType = vm["colorMapRendering"].as<string>();
-    DGtal::GradientColorMap<double>  gradMap (valueMin, valueMax, getPreset(gradType));
-    DGtal::GenericWriter<Image2D, 2, double, DGtal::GradientColorMap<double>>::exportFile(outputFilename,       resultingImage, gradMap );
+    exportImageWithGrad(resultingImage, vm["colorMapRendering"].as<std::string>(),  outputFilename );
   }
   else
   {
+    auto minMax = std::minmax_element(resultingImage.range().begin(), resultingImage.range().end());
     GenericWriter< Image2D, 2, unsigned char,RescalFCTc >::exportFile( outputFilename,
                                                                       resultingImage,
-                                                                      RescalFCTc(valueMin,
-                                                                                 valueMax, 0, 255) );
-    
-    
+                                                                      RescalFCTc(*(minMax.first),
+                                                                                 *(minMax.second), 0, 255) );
+
+
   }
   trace.info() << " [done] " << std::endl ;
   return 0;
