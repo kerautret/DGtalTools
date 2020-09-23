@@ -213,8 +213,7 @@ namespace DGtal
                        bool perfect_data = false );
 
 
-/*
-        /**
+       /*
         * Adds an input 2-form by filtering a smaller \a image values (size N/2 X N/2).
         *
         * @param image any image such that the domain size is half than actual domain.

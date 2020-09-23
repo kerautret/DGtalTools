@@ -38,10 +38,7 @@
 #include <ctime>
 #include <fstream>
 
-#include <boost/program_options/options_description.hpp>
-#include <boost/program_options/parsers.hpp>
-#include <boost/program_options/variables_map.hpp>
-
+#include "CLI11.hpp"
 
 #include "DGtal/base/Common.h"
 #include "DGtal/helpers/StdDefs.h"
@@ -148,7 +145,7 @@ For more details, see \ref moduleAT
 
 @b example with multiresolution:
 \code
-./imageProcessing/at-u2-v0-m -i ./../imageProcessing/Images/CarreSimple/Carre.pgm --epsilon-1 2 --epsilon-2 1 -v 0 -o ./imageProcessing/multi -a 1 -l 0.1 --multiresolution true -t "32 64 128"
+./imageProcessing/at-u2-v0-m -i ./../imageProcessing/Images/CarreSimple/Carre.pgm --epsilon-1 2 --epsilon-2 1 -v 0 -o ./imageProcessing/multi -a 1 -l 0.1 --multiresolution  -t "32 64 128"
 \endcode
 
 <center>
@@ -199,105 +196,101 @@ typedef ImageContainerBySTLVector<Domain, unsigned char> GreyLevelImage;
 
 int main( int argc, char* argv[] )
 {
+  // parse command line ----------------------------------------------
+  CLI::App app;
+  string f1;
+  string f2 {"AT"};
+  string inpainting_mask;
+  double l;
+  double l1 {0.3125};
+  double l2 {0.0005};
+  double lr {sqrt(2)};
+  double a   {1.0};
+  double epsilon;
+  double step;
+  double h;
+  double e1  {2.0};
+  double e2 {0.25};
+  double er  {2.0};
+  int  verb  {0};
+  int nbiter = {10};
+  int pix_sz = {1};
+  string scv {"0xff0000"};
+  string isnr;
+  string  taille;
+  bool metric;
+  bool multires;
+  
+  
+  stringstream ssDescr;
+  ssDescr  << "Usage: " << argv[0] << " -i toto.pgm -o res.pgm\n"
+  
+  << "Computes the Ambrosio-Tortorelli reconstruction/segmentation of an input image."
+  << "It outputs 2 or 3 images (of basename given by option --output) giving the"
+  << " reconstructed image u, and other images superposing u and the discontinuities v."
+  << endl << endl
+  << " / "
+  << endl
+  << " | a.(u-g)^2 + v^2 |grad u|^2 + le.|grad v|^2 + (l/4e).(1-v)^2 "
+  << endl
+  << " / "
+  << endl
+  << "Discretized as (u 2-form, v 0-form, A vertex-edge bdry, B edge-face bdy, M vertex-edge average)" << endl
+  << "E(u,v) = a(u-g)^t (u-g) +  u^t B diag(M v)^2 B^t u + l e v^t A^t A v + l/(4e) (1-v)^t (1-v)" << endl
+  << endl
+  << "Example: ./at-u2-v0-m -i ../Images/cerclesTriangle64b02.pgm -o tmp -a 0.05 -e 1 --lambda-1 0.1 --lambda-2 0.00001"
+  << endl;
+  
+  app.description(ssDescr.str());
+  
+  app.add_option("-i,--input,1", f1, "the input image PPM filename." )
+  ->required()
+  ->check(CLI::ExistingFile);
+  app.add_option("--inpainting-mask,-m", inpainting_mask, "the input inpainting mask filename." );
+  app.add_option("--output,-o", f2, "the output image basename.", true);
+  auto lambdaOpt = app.add_option("--lambda,-l",l, "the parameter lambda.");
+  app.add_flag("--metric-average,-M",metric, "use metric average to smooth L1-metric." );
+  
+  app.add_option("--lambda-1,-1",l1, "the initial parameter lambda (l1).", true);
+  app.add_option("--lambda-2,-2",l2, "the final parameter lambda (l2).", true );
+  app.add_option("--lambda-ratio,-q",lr,  "the division ratio for lambda from l1 to l2.", true);
+  app.add_option("--alpha,-a",a, "the parameter alpha.", true);
+  auto epsOpt = app.add_option("--epsilon,-e", "the initial and final parameter epsilon of AT functional at the same time.");
+  
+  app.add_option("--epsilon-1",e1, "the initial parameter epsilon.", true);
+  app.add_option("--epsilon-2",e2, "the final parameter epsilon.", true);
+  app.add_option("--epsilon-r",er,  "sets the ratio between two consecutive epsilon values of AT functional.", true);
+  
+  app.add_option("--nbiter,-n",nbiter, "the maximum number of iterations.", true );
+  auto snrOpt = app.add_option("--image-snr", isnr, "the input image without deterioration if you wish to compute the SNR.");
+  app.add_option("--pixel-size,-p", pix_sz, "the pixel size for outputing images (useful when one wants to see the discontinuities v on top of u).", true);
+  app.add_option("--color-v,-c",scv, "the color chosen for displaying the singularities v (e.g. red is 0xff0000).", true );
+  app.add_option("--verbose,-v", verb, "the verbose level (0: silent, 1: less silent, etc).", true );
+  app.add_option("--images-size,-t", taille, "sizes to run for multiresolution.");
+  auto stepOpt = app.add_option("--step", step,  "the step size.");
+  app.add_flag("--multiresolution", multires,  "option for multiresolution.");
+  app.get_formatter()->column_width(40);
+  CLI11_PARSE(app, argc, argv);
+// END parse comm"metric-average,Mand line using CLI ----------------------------------------------
 
-    // parse command line ----------------------------------------------
-    namespace po = boost::program_options;
-    po::options_description general_opt("Allowed options are: ");
-    general_opt.add_options()
-            ("help,h", "display this message")
-            ("input,i", po::value<string>(), "the input image PPM filename." )
-            ("inpainting-mask,m", po::value<string>(), "the input inpainting mask filename." )
-            ("output,o", po::value<string>()->default_value( "AT" ), "the output image basename." )
-            ("metric-average,M", "use metric average to smooth L1-metric." )
-            ("lambda,l", po::value<double>(), "the parameter lambda." )
-            ("lambda-1,1", po::value<double>()->default_value( 0.3125 ), "the initial parameter lambda (l1)." )
-            ("lambda-2,2", po::value<double>()->default_value( 0.0005 ), "the final parameter lambda (l2)." )
-            ("lambda-ratio,q", po::value<double>()->default_value( sqrt(2) ), "the division ratio for lambda from l1 to l2." )
-            ("alpha,a", po::value<double>()->default_value( 1.0 ), "the parameter alpha (should be multiplied by N^2 where NxN is the size of the finest image)." )
-            ("epsilon,e", po::value<double>(), "the initial and final parameter epsilon of AT functional at the same time." )
-            ("epsilon-1", po::value<double>()->default_value( 2.0 ), "the initial parameter epsilon." )
-            ("epsilon-2", po::value<double>()->default_value( 0.25 ), "the final parameter epsilon." )
-            ("epsilon-r", po::value<double>()->default_value( 2.0 ), "sets the ratio between two consecutive epsilon values of AT functional." )
-            ("nbiter,n", po::value<int>()->default_value( 10 ), "the maximum number of iterations." )
-            ("image-snr", po::value<string>(), "the input image without deterioration if you wish to compute the SNR." )
-            ("pixel-size,p", po::value<int>()->default_value( 1 ), "the pixel size for outputing images (useful when one wants to see the discontinuities v on top of u)." )
-            ("color-v,c", po::value<string>()->default_value( "0xff0000" ), "the color chosen for displaying the singularities v (e.g. red is 0xff0000)." )
-            ("verbose,v", po::value<int>()->default_value( 0 ), "the verbose level (0: silent, 1: less silent, etc)." )
-            ("step,s", po::value<double>(), "the step size." )
-            ("multiresolution", po::value<string>(), "option for multiresolution." )
-            ("images-size,t", po::value<string>(), "sizes to run for multiresolution." )
-            ;
-
-    bool parseOK=true;
-    po::variables_map vm;
-    try {
-        po::store(po::parse_command_line(argc, argv, general_opt), vm);
-    } catch ( const exception& ex ) {
-        parseOK = false;
-        cerr << "Error checking program options: "<< ex.what()<< endl;
-    }
-    po::notify(vm);
-    if ( ! parseOK || vm.count("help") || !vm.count("input") )
-    {
-        cerr << "Usage: " << argv[0] << " -i toto.pgm -o res.pgm\n"
-
-             << "Computes the Ambrosio-Tortorelli reconstruction/segmentation of an input image."
-             << "It outputs 2 or 3 images (of basename given by option --output) giving the"
-             << " reconstructed image u, and other images superposing u and the discontinuities v."
-             << endl << endl
-             << " / "
-             << endl
-             << " | a.(u-g)^2 + v^2 |grad u|^2 + le.|grad v|^2 + (l/4e).(1-v)^2 "
-             << endl
-             << " / "
-             << endl
-             << "Discretized as (u 2-form, v 0-form, A vertex-edge bdry, B edge-face bdy, M vertex-edge average)" << endl
-             << "E(u,v) = a(u-g)^t (u-g) +  u^t B diag(M v)^2 B^t u + l e v^t A^t A v + l/(4e) (1-v)^t (1-v)" << endl
-             << endl
-             << general_opt << "\n"
-             << "Example: ./at-u2-v0-m -i ../Images/cerclesTriangle64b02.pgm -o tmp -a 0.05 -e 1 --lambda-1 0.1 --lambda-2 0.00001"
-             << endl;
-        return 1;
-    }
-    string f1  = vm[ "input" ].as<string>();
-    string f2  = vm[ "output" ].as<string>();
-    bool metric= vm.count( "metric-average" );
-    double l1  = vm[ "lambda-1" ].as<double>();
-    double l2  = vm[ "lambda-2" ].as<double>();
-    double lr  = vm[ "lambda-ratio" ].as<double>();
-    if ( vm.count( "lambda" ) ) l1 = l2 = vm[ "lambda" ].as<double>();
-    if ( l2 > l1 ) l2 = l1;
-    if ( lr <= 1.0 ) lr = sqrt(2);
-    double a   = vm[ "alpha" ].as<double>();
-    double e1  = vm[ "epsilon-1" ].as<double>();
-    double e2  = vm[ "epsilon-2" ].as<double>();
-    if ( vm.count( "epsilon" ) )
-        e1 = e2 =  vm[ "epsilon" ].as<double>();
-    double er  = vm[ "epsilon-r" ].as<double>();
-    int  verb  = vm[ "verbose" ].as<int>();
-    int nbiter = vm[ "nbiter" ].as<int>();
-    int pix_sz = vm[ "pixel-size" ].as<int>();
-    string scv = vm[ "color-v" ].as<string>();
-    bool snr   = vm.count( "image-snr" );
-    string isnr= snr ? vm[ "image-snr" ].as<string>() : "";
-    Color color_v( (unsigned int) std::stoul( scv, nullptr, 16 ), 255 );
-    double h;
-    bool multires = vm.count( "multiresolution" );
-    string taille = multires ? vm[ "images-size" ].as<string>() : "";
 
 
     // Copie des variables qui sont mene a bouger
     string f1_copy = f1;
     string f2_copy = f2;
     double l1_copy = l1;
+    Color color_v( (unsigned int) std::stoul( scv, nullptr, 16 ), 255 );
 
+  
     // Creating memory vectors for keep u and v for each size
     std::vector< string > file_restored;
     std::vector< string > file_contours;
     std::vector< string > filename1;
     std::vector< string > filename2;
+    bool snr   = snrOpt->count() > 0;
 
-
+    
+  
     // Gestion des tailles pour la multiresolution
     std::stringstream iss( taille );
     std::vector<int> mySizes;
@@ -382,8 +375,8 @@ int main( int argc, char* argv[] )
             if(verb > 0)trace.info() << "[Dimension de l'image] Ny = " << Ny << endl;
 
             // Definition of step
-            if ( vm.count( "step" ) )
-                h = vm[ "step" ].as<double>();
+            if ( stepOpt->count() > 0 )
+                h = step;
             else
                 h = 1.0 / ( std::max(Nx, Ny) );
 
@@ -408,8 +401,8 @@ int main( int argc, char* argv[] )
             if(verb > 0) trace.info() << "[Dimension de l'image] Ny = " << Ny << endl;
 
             // Definition of step
-            if ( vm.count( "step" ) )
-                h = vm[ "step" ].as<double>();
+            if ( stepOpt->count() > 0 )
+                h = step;
             else
                 h = 1.0 / ( std::max(Nx, Ny) );
 
@@ -493,9 +486,9 @@ int main( int argc, char* argv[] )
         // -------------------------------------------------------
         double g_snr = snr ? AT.computeSNR() : 0.0;
 
-        if ( vm.count( "inpainting-mask" ) )
+        if (  inpainting_mask.size() > 0 )
         {
-            string fm  = vm[ "inpainting-mask" ].as<string>();
+          string fm  = inpainting_mask;
             trace.info() << endl;
             trace.beginBlock("Reading inpainting mask");
             GreyLevelImage mask = GenericReader<GreyLevelImage>::import( fm );
