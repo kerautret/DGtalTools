@@ -18,7 +18,7 @@
     (Bertrand Kerautret [#439](https://github.com/DGtal-team/DGtalTools/pull/439)) 
 
 - *generatos*
-  - 2dSimplePolygonDigitizer: new tool compute the Gauss Digitization of a simple closed polyline.
+  - 2dSimplePolygonDigitizer: new tool to compute the Gauss Digitization of a simple closed polyline.
     (Phuc Ngo [#398](https://github.com/DGtal-team/DGtalTools/pull/398)) 
 
 - *visualisation*
