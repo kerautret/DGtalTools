@@ -325,14 +325,15 @@ int main( int argc, char** argv )
   }
   if(displayMesh != "")
   {
+    DGtal::Mesh<Z3i::RealPoint> aMesh(true);
+    MeshReader<Z3i::RealPoint>::importOBJFile(displayMesh, aMesh);
     if(colorMesh.size() != 0)
     {
-      Color c(colorMesh[0], colorMesh[1], colorMesh[2], colorMesh[3]);
-      viewer.setFillColor(c);
+      Color c(colorMesh[0], colorMesh[1], colorMesh[2], colorMesh[3]);      
+      for(unsigned i=0; i<aMesh.nbFaces(); i++){
+	aMesh.setFaceColor(i, c);
+      }
     }
-    
-    DGtal::Mesh<Z3i::RealPoint> aMesh(colorMesh.size() == 0);
-    MeshReader<Z3i::RealPoint>::importOFFFile(displayMesh, aMesh);
     viewer << aMesh;
   }
   
