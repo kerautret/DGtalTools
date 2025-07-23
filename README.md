@@ -1,6 +1,5 @@
 DGtalTools
 ==========
-
 DGtalTools is a separate github project containing tools constructed
 using DGtal library. The main goal of this part is to gather simple
 and useful tools exploiting the structures and algorithms defined in
@@ -26,6 +25,7 @@ own source code (in complement of DGtal tutorial https://dgtal-team.github.io/do
 More Information
 ----------------
 * Related DGtalTools-contrib: https://github.com/DGtal-team/DGtalTools-contrib
+* Release 1.4 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11577409.svg)](https://doi.org/10.5281/zenodo.11577409)
 * Release 1.3 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7395984.svg)](https://doi.org/10.5281/zenodo.7395984)
 * Release 1.2 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4893597.svg)](https://doi.org/10.5281/zenodo.4893597)
 * Release 1.1 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4079375.svg)](https://doi.org/10.5281/zenodo.4079375)
@@ -37,8 +37,8 @@ More Information
 * Release 0.9.1 [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.45130.svg)](http://dx.doi.org/10.5281/zenodo.45130)
 * Release 0.9 [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.31882.svg)](http://dx.doi.org/10.5281/zenodo.31882)
 * Release 0.8 [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.11587.svg)](http://dx.doi.org/10.5281/zenodo.11587)
-* Continuous Integration (Linux/MacOS) ![Build status](https://github.com/DGtal-team/DGtalTools/actions/workflows/buildAndDocumentation.yml/badge.svg)
-* Windows [![Build status](https://ci.appveyor.com/api/projects/status/o156pe96bd02sdr5/branch/master?svg=true)](https://ci.appveyor.com/project/kerautret/dgtaltools-7x999/branch/master)
+* Continuous Integration (Linux/MacOS/Windows) ![Build status](https://github.com/DGtal-team/DGtalTools/actions/workflows/buildAndDocumentation.yml/badge.svg)
+
 
 Documentation
 ==============
@@ -197,6 +197,13 @@ Galleries
    <td align=center  ><a href="https://dgtal-team.github.io/doctools-nightly/CompSurfelData.html" > 3dCompSurfelData</a></td>
    <td  align="center" colspan="2"><a href="https://dgtal-team.github.io/doctools-nightly/Doc3dImplicitSurfaceExtractorByThickening.html" > 3dImplicitSurfaceExtractorByThickening</a> </td>
    </tr>
+<tr>
+       <td align="center" colspan="2"><img width=250 src="doc/images/volscope-surface.png"</td>
+
+</tr>
+      <tr>
+      <td  align="center" colspan="2"> volscope </td>
+</tr>
    </table>
    </center>
 
@@ -236,3 +243,4 @@ Galleries
    </tr>
    </table>
    </center>
+

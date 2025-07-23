@@ -15,7 +15,7 @@
  **/
 /**
  * @file volSegment.cpp
- * @ingroup volumetric
+ * @ingroup Volumetric
  * @author Bertrand Kerautret (\c kerautre@loria.fr )
  * LORIA (CNRS, UMR 7503), University of Nancy, France
  *
@@ -53,7 +53,7 @@ using namespace DGtal;
  @page volSegment volSegment
  
  @brief Segments volumetric file from a simple threshold which can be set automatically from the otsu estimation.
-
+ @ingroup volumetrictools
 
  @b Usage: volSegment [input] [output]
 
@@ -69,7 +69,7 @@ using namespace DGtal;
    -h,--help                             Print this help message and exit.
    -i,--input TEXT:FILE REQUIRED         volumetric input file (.vol, .pgm, .pgm3d, .longvol)
    -o,--output TEXT=result.vol           volumetric output file (.vol, .pgm, .pgm3d, .longvol)
-   --outputTypeUInt                      to specify the output image type (unsigned int) instead using the default unsigned char. If this flag is selected you have to check the output file format type (longvol, or an ITK image type if the DGtal WITH_ITK option is selected).
+   --outputTypeUInt                      to specify the output image type (unsigned int) instead using the default unsigned char. If this flag is selected you have to check the output file format type (longvol, or an ITK image type if the DGtal DGTAL_WITH_ITK option is selected).
    --labelBackground                     option to define a label to regions associated to object background.
    -m,--thresholdMin INT=0               min threshold (if not given the max threshold is computed with Otsu algorithm).
    -M,--thresholdMax INT=255             max threshold
@@ -238,13 +238,13 @@ int main( int argc, char** argv )
   app.add_option("-i,--input,1", inputFileName, "volumetric input file (.vol, .pgm, .pgm3d, .longvol)." )
   ->required()
   ->check(CLI::ExistingFile);
-  app.add_option("-o,--output,2", outputFileName, "volumetric output file (.vol, .pgm, .pgm3d, .longvol)", true);
+  app.add_option("-o,--output,2", outputFileName, "volumetric output file (.vol, .pgm, .pgm3d, .longvol)");
 
-  app.add_flag("--outputTypeUInt", outputTypeInt, "to specify the output image type (unsigned int) instead using the default unsigned char. If this flag is selected you have to check the output file format type (longvol, or an ITK image type if the DGtal WITH_ITK option is selected).");
+  app.add_flag("--outputTypeUInt", outputTypeInt, "to specify the output image type (unsigned int) instead using the default unsigned char. If this flag is selected you have to check the output file format type (longvol, or an ITK image type if the DGtal DGTAL_WITH_ITK option is selected).");
 
   auto labelOpt = app.add_flag("--labelBackground",labelBackground, "option to define a label to regions associated to object background.");
-  app.add_option("-m,--thresholdMin",minTh, "min threshold (if not given the max threshold is computed with Otsu algorithm).", true );
-  auto maxThOpt = app.add_option("-M,--thresholdMax", maxTh, "max threshold", true );
+  app.add_option("-m,--thresholdMin",minTh, "min threshold (if not given the max threshold is computed with Otsu algorithm)." );
+  auto maxThOpt = app.add_option("-M,--thresholdMax", maxTh, "max threshold" );
 
   
   app.get_formatter()->column_width(40);

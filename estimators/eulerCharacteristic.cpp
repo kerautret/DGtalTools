@@ -16,6 +16,7 @@
 
 /**
  * @file eulerCharacteristic.cpp
+ * @ingroup Estimators
  * @author David Coeurjolly (\c david.coeurjolly@liris.cnrs.fr )
  * Laboratoire d'InfoRmatique en Image et Systèmes d'information - LIRIS (CNRS, UMR 5205), CNRS, France
  *
@@ -43,7 +44,8 @@ using namespace Z3i;
  @page eulerCharacteristic eulerCharacteristic
  
  @brief Computes the Euleur Characteristic of  a vol to a 8-bit raw file.
-
+ @ingroup estimatortools
+ 
  The vol file is first binarized using interval [m,M[ thresholds and
  the Eucler characteristic is given from the cubical complex.
 
@@ -92,8 +94,8 @@ int main(int argc, char**argv)
 
   app.description("Computes the Euleur Characteristic of  a vol to a 8-bit raw file.\n Typical use example:\n \t eulerCharacteristic <volFileName> -m <minlevel> -M <maxlevel>\n");
   app.add_option("--input,-i,1", filename, "Input vol file." )->required()->check(CLI::ExistingFile);
-  app.add_option("--thresholdMin,-m", thresholdMin, "threshold min (excluded) to define binary shape (default 0)", true);
-  app.add_option("--thresholdMax,-M", thresholdMax, "threshold max (included) to define binary shape (default 255)", true);
+  app.add_option("--thresholdMin,-m", thresholdMin, "threshold min (excluded) to define binary shape (default 0)");
+  app.add_option("--thresholdMax,-M", thresholdMax, "threshold max (included) to define binary shape (default 255)");
   
   app.get_formatter()->column_width(40);
   CLI11_PARSE(app, argc, argv);

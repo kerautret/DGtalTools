@@ -15,7 +15,7 @@
  **/
 /**
  * @file curvatureMCMS.cpp
- * @ingroup estimators
+ * @ingroup Estimators
  * @author Tristan Roussillon (\c tristan.roussillon@liris.cnrs.fr ) 
  * Laboratoire d'InfoRmatique en Image et Systèmes d'information - LIRIS (CNRS, UMR 5205), CNRS,
  * France
@@ -62,7 +62,8 @@ using namespace std;
  @page curvatureMCMS curvatureMCMS
  
  @brief Estimates curvature using length of most centered segment computers.
-
+ @ingroup estimatortools
+ 
  @b Usage:  curvatureMCMS [options] --input  <fileName> 
 
 
@@ -160,7 +161,7 @@ int main( int argc, char** argv )
 
   app.description("Estimates curvature using length of most centered segment computers.\n Typical use example:\n \t curvatureMCMS [options] --input  <fileName>\n");
   app.add_option("-i,--input, 1",fileName,"Input FreemanChain file name")->required()->check(CLI::ExistingFile);
-  app.add_option("--GridStep", h, "Grid step",true);
+  app.add_option("--GridStep", h, "Grid step");
   
   app.get_formatter()->column_width(40);
   CLI11_PARSE(app, argc, argv);

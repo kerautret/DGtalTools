@@ -15,7 +15,7 @@
  **/
 /**
  * @file statisticsEstimators.cpp
- * @ingroup Tools
+ * @ingroup Estimators
  * @author Jeremy Levallois (\c jeremy.levallois@liris.cnrs.fr)
  * Laboratoire d'InfoRmatique en Image et Systèmes d'information - LIRIS (CNRS, UMR 5205), CNRS,
  * France
@@ -49,7 +49,8 @@ using namespace DGtal;
  @page statisticsEstimators statisticsEstimators
  
  @brief   Computes satistics (L1, L2, Loo) from results of two estimators.
-
+ @ingroup estimatortools
+ 
  @b Usage: 	statisticsEstimators --file1 <file1> --column1 <column1> --file2 <file2> --column2 <column2> --output <output>
 
 
@@ -260,7 +261,7 @@ int main( int argc, char** argv )
     app.add_option("--column1,-c", column1, "Column of file 1" )->required();
     app.add_option("--column2,-C", column2, "Column of file 2" )->required();
     app.add_option("--output,-o,2", output_filename, "Output file")->required();
-    app.add_option("--monge,-m", isMongeMean, "Is from Monge mean computation (optional, default false)", true);
+    app.add_option("--monge,-m", isMongeMean, "Is from Monge mean computation (optional, default false)");
 
     app.get_formatter()->column_width(40);
     CLI11_PARSE(app, argc, argv);

@@ -15,7 +15,7 @@
  **/
 /**
  * @file mesh2heightfield.cpp
- * @ingroup converters
+ *  @ingroup Converters
  * @author Bertrand Kerautret (\c kerautre@loria.fr )
  * LORIA (CNRS, UMR 7503), University of Nancy, France
  *
@@ -57,7 +57,8 @@ using namespace DGtal;
 /**
  @page mesh2heightfield mesh2heightfield
  @brief  Converts a mesh file into a projected 2D image given from a normal direction N and from a starting point P.
-
+ @ingroup convertertools
+ 
  The 3D mesh is discretized and scanned in the normal direction N, starting from P with a step 1.
 
 
@@ -268,26 +269,26 @@ int main( int argc, char** argv )
   app.add_option("-i,--input,1", inputFileName, "mesh file (.off)" )
     ->required()
     ->check(CLI::ExistingFile);
-  app.add_option("-o,--output,2", outputFileName, "sequence of discrete point file (.sdp) ", true );
+  app.add_option("-o,--output,2", outputFileName, "sequence of discrete point file (.sdp) " );
   app.add_option("--meshScale,-s", meshScale, "change the default mesh scale (each vertex multiplied by the scale) ");
-  app.add_option("--remeshMinArea,-a", triangleAreaUnit, "ajust the remeshing min triangle are used to avoid empty areas", true);
+  app.add_option("--remeshMinArea,-a", triangleAreaUnit, "ajust the remeshing min triangle are used to avoid empty areas");
 
-  app.add_option("--heightFieldMaxScan", maxScan, "set the maximal scan deep.", true );
+  app.add_option("--heightFieldMaxScan", maxScan, "set the maximal scan deep." );
   app.add_option("-x,--centerX",
-                              centerX, "choose x center of the projected image.", true);
+                              centerX, "choose x center of the projected image.");
   app.add_option("-y,--centerY",
-                              centerY, "choose y center of the projected image.", true);
+                              centerY, "choose y center of the projected image.");
   app.add_option("-z,--centerZ",
-                              centerZ, "choose z center of the projected image.", true);
+                              centerZ, "choose z center of the projected image.");
   auto optNx = app.add_option("--nx",
-                              nx, "set the x component of the projection direction.", true);
+                              nx, "set the x component of the projection direction.");
   auto optNy = app.add_option("--ny",
-                              ny, "set the y component of the projection direction.", true);
+                              ny, "set the y component of the projection direction.");
   auto optNz = app.add_option("--nz",
-                              nz, "set the z component of the projection direction.", true);
+                              nz, "set the z component of the projection direction.");
   app.add_flag("--invertNormals,-v", invertNormal, "invert normal vector of the mesh");
-  app.add_option("--width", widthImageScan, "set the width of the area to be extracted as an height field image. (note that the resulting image width also depends of the scale parameter (option --meshScale))", true );
-  app.add_option("--height", heightImageScan, "set the height of the area to extracted  as an height field image. (note that the resulting image height also depends of the scale parameter (option --meshScale))", true );
+  app.add_option("--width", widthImageScan, "set the width of the area to be extracted as an height field image. (note that the resulting image width also depends of the scale parameter (option --meshScale))" );
+  app.add_option("--height", heightImageScan, "set the height of the area to extracted  as an height field image. (note that the resulting image height also depends of the scale parameter (option --meshScale))" );
   app.add_flag("--orientAutoFrontX", orientAutoFrontX,"automatically orients the camera in front according the x axis." );
   app.add_flag("--orientAutoFrontY", orientAutoFrontY,"automatically orients the camera in front according the y axis." );
   app.add_flag("--orientAutoFrontZ", orientAutoFrontZ,"automatically orients the camera in front according the z axis." );
@@ -309,7 +310,7 @@ int main( int argc, char** argv )
   double diagDist = (b.first-b.second).norm();
   if(diagDist<minDiagVolSize){
     meshScale = minDiagVolSize/diagDist;
-    inputMesh.changeScale(meshScale);
+    inputMesh.rescale(meshScale);
   }
 
   triangleAreaUnit *= meshScale;

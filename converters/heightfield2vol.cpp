@@ -15,7 +15,7 @@
  **/
 /**
  * @file heightfield2vol.cpp
- * @ingroup converters
+ *  @ingroup Converters
  * @author Bertrand Kerautret (\c kerautre@loria.fr )
  * LORIA (CNRS, UMR 7503), University of Nancy, France
  *
@@ -47,6 +47,8 @@ using namespace DGtal;
 /**
  @page heightfield2vol heightfield2vol
  @brief  Converts a 2D heightfield image into a volumetric file.
+ @ingroup convertertools
+
 
 @b Usage: heightfield2vol [OPTIONS] 1 [2]
 
@@ -137,7 +139,7 @@ int main( int argc, char** argv )
    app.add_option("-i,--input,1", inputFileName, "input heightfield file (2D image).")
      ->check(CLI::ExistingFile)
      ->required();
-   app.add_option("-o,--output,2", outputFileName,"output volumetric file.", true);
+   app.add_option("-o,--output,2", outputFileName,"output volumetric file.");
    app.add_option("-s,--scale", scale, "set the scale factor on height values (default 1.0)");
    app.add_option("-z,--volZ", maxZ, "set the Z max value of domain.");
    app.add_option("-f,--foregroundValue", foregroundValue, "specify the foreground value of the resulting voxel.");

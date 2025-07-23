@@ -1,4 +1,28 @@
-# DGtalTools 1.4 (beta)
+# DGtalTools 2.0 
+
+- *build*
+  - Update from DGtal 2.0 (cmake and tools env variable) (Bastien Doignies, [#467](https://github.com/DGtal-team/DGtalTools/pull/467))
+  - Update CLI11 and cmake polyscope dependencies (Bertrand Kerautret [468](https://github.com/DGtal-team/DGtalTools/pull/468)) 
+
+
+# DGtalTools 1.5 
+
+- *build*
+  - Fix DGtalTools doc deployement.
+    (David Coeurjolly and Bertrand Kerautret [#454](https://github.com/DGtal-team/DGtalTools/pull/454))
+    
+- *global*
+  - Continuous integration fix using new version on conan following DGtal changes.
+    (Bertrand Kerautret [#465](https://github.com/DGtal-team/DGtalTools/pull/465))
+
+
+# DGtalTools 1.4 
+
+- *build*
+  - Remove STBimage preprocessor instruction used to fix MVSC that is 
+    no more usefull since DGtal PR [175](https://github.com/DGtal-team/DGtal/pull/1715) 
+    (Bertrand Kerautret [#459](https://github.com/DGtal-team/DGtalTools/pull/459))
+
 
 - *visualisation*
   - meshViewer: new options to change the default background color, to
@@ -10,10 +34,25 @@
     some simplications of the option --doSnapShotAndExit.  (Bertrand
     Kerautret
     [#448](https://github.com/DGtal-team/DGtalTools/pull/448))
+  - meshViewer: new option to set alpha channel of the mesh color.
+  (Bertrand  Kerautret
+    [#451](https://github.com/DGtal-team/DGtalTools/pull/451))
+  - 3dSDPViewer: new option to set alpha channel of the mesh color.
+  (Xun Gong
+    [#452](https://github.com/DGtal-team/DGtalTools/pull/452))
+  - meshViewer: Add colored SDP option in meshViewer when input texts is an alpha mesh and a colored SDP respectively.
+  (Xun Gong
+    [#452](https://github.com/DGtal-team/DGtalTools/pull/452))
+  - volscope new vol visualization tool using polyscope (David Coeurjolly, 
+    [#455](https://github.com/DGtal-team/DGtalTools/pull/455))
+  - volscope documentation enhanced (David Coeurjolly, 
+    [#460](https://github.com/DGtal-team/DGtalTools/pull/460))
 
 - *volumetric*
     - volReSample: fix the impossibility to export to vol when ITK is activated
       (Bertrand Kerautret [#445](https://github.com/DGtal-team/DGtalTools/pull/445))
+    - volFillInterior: add new option to set the filling value.  
+      (Bertrand Kerautret [#456](https://github.com/DGtal-team/DGtalTools/pull/456))
 
 - *converters*
    - mesh2vol: small fix to read generic mesh. 
@@ -23,14 +62,15 @@
      
 
 
-
 # DGtalTools 1.3
 
 - *build*
   - New cmake option (DGTAL_RANDOMIZED_BUILD_THRESHOLD) to set the
     (approximated) % of tools build
-    (Bertrand Kerautret [#416](https://github.com/DGtal-team/DGtal/pull/416))
-
+    (Bertrand Kerautret [#416](https://github.com/DGtal-team/DGtalTools/pull/416))
+  - Following DGtal C++17 is now required. (David Coeurjolly and Bertrand Kerautret, 
+     [#449](https://github.com/DGtal-team/DGtal/pull/449))
+     
 - *converters*
   - heightfield2shading: new option to add a matcap rendering (from normal
     direction interpreted as HSV vector)

@@ -15,7 +15,7 @@
  **/
 /**
  * @file 2dSimplePolygonDigitizer.cpp
- * @ingroup Tools
+ * @ingroup Generators
  * @author Phuc Ngo (\c hoai-diem-phuc.ngo@loria.fr)
  * LORIA - Lorraine Univeristy , France
  *
@@ -52,6 +52,8 @@ using namespace DGtal;
 /**
  @page 2dSimplePolygonDigitizer 2dSimplePolygonDigitizer
  @brief Compute the Gauss Digitization of a simple closed polyline (no hole or self-intersection).
+ @ingroup generatorstools
+
  
  The digitizer compute the set of integer points inside the input polyline.
  
@@ -113,7 +115,7 @@ int main( int argc, char** argv )
     app.add_option("-i,--input,1", inputFileName, "Input filename (freeman chain of sdp)." )
     ->required()
     ->check(CLI::ExistingFile);
-    app.add_option("-o,--output,2", outputFileName, "Output filename", true);
+    app.add_option("-o,--output,2", outputFileName, "Output filename");
     
     app.get_formatter()->column_width(40);
     CLI11_PARSE(app, argc, argv);

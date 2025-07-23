@@ -15,7 +15,7 @@
  **/
 /**
  * @file displayContours.cpp
- * @ingroup visualization
+ * @ingroup Visualisation
  * @author Bertrand Kerautret (\c kerautre@loria.fr)
  * LORIA (CNRS, UMR 7503), University of Nancy, France
  *
@@ -76,7 +76,7 @@ using namespace DGtal;
  @page displayContours displayContours
  
  @brief Displays discrete contours.
- 
+ @ingroup visualizationtools 
  
  @b Usage:   	 displayContours [options] -i  <fileName>
  
@@ -131,7 +131,7 @@ using namespace DGtal;
  $ img2freeman $DGtal/examples/samples/church.pgm  -R 0 20 255 -s 200  > church.fc
  @endcode
  
- Then, we display the set of contours with the background images (you need to have compiled DGTal with the options (-DWITH_MAGICK=true and -DWITH_CAIRO=true) :
+ Then, we display the set of contours with the background images (you need to have compiled DGTal with the options (-DWITH_MAGICK=true and -DDGTAL_WITH_CAIRO=true) :
  
  @code
  $  displayContours church.fc   --backgroundImage $DGtal/examples/samples/church.png --alphaBG 0.75 --outputFile church.pdf
@@ -198,8 +198,8 @@ int main( int argc, char** argv )
   -> check(CLI::IsMember({"MS", "FP", "MLP"}));
   
   app.add_option("--displayVectorField,-v", displayVectorField, "Add the display of a vector field represented by two floating coordinates. Each vector is displayed starting from the corresponding contour point coordinates.");
-  app.add_option("--scaleVectorField",scaleVectorField, "set the scale of the vector field (default 1) (used with --displayVectorField).", true);
-  app.add_option("--vectorFieldIndex", vectorFieldIndex ,"specify the vector field index (by default 0,1) (used with --displayVectorField).", true)
+  app.add_option("--scaleVectorField",scaleVectorField, "set the scale of the vector field (default 1) (used with --displayVectorField).");
+  app.add_option("--vectorFieldIndex", vectorFieldIndex ,"specify the vector field index (by default 0,1) (used with --displayVectorField).")
   ->expected(2);
   
   auto optVFAngke = app.add_option("--vectorFromAngle", vectorFromAngle, "specify that the vectors are defined from an angle value represented at the given index  (by default 0) (used with --displayVectorField).");
@@ -211,8 +211,8 @@ int main( int argc, char** argv )
   ->needs(optSDP);
   app.add_option("--backgroundImage", backgroundImage, "backgroundImage <filename> : display image as background ")
   ->check(CLI::ExistingFile);
-  app.add_option("--alphaBG", alphaBG, "alphaBG <value> 0-1.0 to display the background image in transparency (default 1.0), (transparency works only if cairo is available)", true);
-  app.add_option("--scale", scale, "scale <value> 1: normal; >1 : larger ; <1 lower resolutions)", true);
+  app.add_option("--alphaBG", alphaBG, "alphaBG <value> 0-1.0 to display the background image in transparency (default 1.0), (transparency works only if cairo is available)");
+  app.add_option("--scale", scale, "scale <value> 1: normal; >1 : larger ; <1 lower resolutions)");
   
   
   
@@ -470,7 +470,7 @@ int main( int argc, char** argv )
     {
       aBoard.saveSVG(outputFileName.c_str());
     }
-#ifdef WITH_CAIRO
+#ifdef DGTAL_WITH_CAIRO
     else
       if (extension=="eps")
       {

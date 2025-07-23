@@ -47,7 +47,7 @@ using namespace DGtal;
  @page volReSample volReSample
  
  @brief Re samples a 3D volumetric image (.vol, .longvol, .pgm3d)  with a given grid size.
-
+ @ingroup volumetrictools
  @b Usage: v ./volumetric/volReSample [OPTIONS] 1 [2]
 
 
@@ -85,7 +85,7 @@ $ cat AlRS{1,2,4,8}.sdp >> AlRS1_2_4_8.sdp
 3dSDPViewer AlRS1_2_4_8.sdp    
 @endcode
 
- Note that if DGtal is compiled with the  option WITH_ITK set to ON, you can export the image in format ITK format and integrating image spacing.
+ Note that if DGtal is compiled with the  option DGTAL_WITH_ITK set to ON, you can export the image in format ITK format and integrating image spacing.
 
  You should obtain such a result:
  @image html resVolReSample.png "Resulting of re sampling with grid size = 2, 4 and 8."
@@ -112,11 +112,11 @@ int main( int argc, char** argv )
   std::vector<double> aGridSizeReSample;
   
   app.description("Re sample a 3D volumetric image (.vol, .longvol, .pgm3d)  with a given grid size. \n Example:\n to re sample an image with scale x,y,z  = 0.98, 0.98, 5.0,  you can do:\n volResSample -i image3d.vol -g 1 1 2  -o imageReSampled.vol \n " 
-      "Note that if DGtal is compiled with the  option WITH_ITK set to ON, you can export the image in format ITK format and integrating image spacing.");
+      "Note that if DGtal is compiled with the  option DGTAL_WITH_ITK set to ON, you can export the image in format ITK format and integrating image spacing.");
   app.add_option("-i,--input,1", inputFileName, "input volumetric file (.vol, .longvol, .pgm3d)." )
   ->required()
   ->check(CLI::ExistingFile);
-  app.add_option("-o,--output,2", outputFileName, "the new volumetric file (.vol, .longvol, .pgm3d).", true );
+  app.add_option("-o,--output,2", outputFileName, "the new volumetric file (.vol, .longvol, .pgm3d)." );
   app.add_option("-g,--gridSize", aGridSizeReSample, "size_x size_y size_z : the grid size of the re sampling ")
    ->expected(3);
   app.get_formatter()->column_width(40);
@@ -134,7 +134,7 @@ int main( int argc, char** argv )
                                                                              aGridSizeReSample,    shiftVector3D);
   const functors::Identity aFunctor{};
   SamplerImageAdapter sampledImage ( input3dImage, reSampler.getSubSampledDomain(), reSampler, aFunctor );
-#ifdef WITH_ITK
+#ifdef DGTAL_WITH_ITK
     const std::string ext = outputFileName.substr( outputFileName.find_last_of(".") + 1 );
     if (std::find(ITK_IO_IMAGE_EXT.begin(),
                   ITK_IO_IMAGE_EXT.end(), ext) != ITK_IO_IMAGE_EXT.end() )

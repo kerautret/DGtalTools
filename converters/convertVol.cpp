@@ -15,7 +15,7 @@
  **/
 /**
  * @file convertVol.cpp
- * @ingroup surfaceTools
+ * @ingroup Converters
  * @author Bertrand Kerautret (\c kerautre@loria.fr )
  * LORIA (CNRS, UMR 7503), University of Nancy, France
  *
@@ -40,6 +40,7 @@ using namespace std;
 using namespace DGtal;
 
 /**
+ @ingroup convertertools
  @page convertVol convertVol
  @brief Converts volumetric file into volumetric file from different formats (pgm3d, vol, longvol). This tool can also be used to upgrade a Version-2 Vol or Longvol file to the new (compressed) Version-3.
 
@@ -87,7 +88,7 @@ int main( int argc, char** argv )
   app.add_option("-i,--input,1", inputFileName, "volumetric file (.pgm3d, .vol, .longvol)." )
     ->required()
     ->check(CLI::ExistingFile);
-  app.add_option("-o,--output,2", outputFileName, "volumetric file (.pgm3d, .vol, .longvol)", true);
+  app.add_option("-o,--output,2", outputFileName, "volumetric file (.pgm3d, .vol, .longvol)");
 
   app.get_formatter()->column_width(40);
   CLI11_PARSE(app, argc, argv);

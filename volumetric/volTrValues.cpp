@@ -16,7 +16,7 @@
  **/
 /**
  * @file volTrValues.cpp
- * @ingroup volumetric/
+ * @ingroup Volumetric
  * @author Bertrand Kerautret (\c kerautre@loria.fr )
  * LORIA (CNRS, UMR 7503), University of Nancy, France
  *
@@ -46,7 +46,8 @@ using namespace Z3i;
  @page volTrValues volTrValues
  
  @brief  Applies basic vol image transform from the input values to output values.
-
+ @ingroup volumetrictools
+ 
  @b Usage:  	 volTrValues --input <volFileName> --o <volOutputFileName> -s 1 99 -r 100 200  
 
 => all voxels of values 1 (resp. 99) will be 100 (resp. 200) in the resulting image.   
@@ -109,7 +110,7 @@ int main(int argc, char**argv)
   ->required()
   ->check(CLI::ExistingFile);
   
-  app.add_option("--output,-o,2",outputFileName, "Output filename.", true);
+  app.add_option("--output,-o,2",outputFileName, "Output filename.");
   app.add_option("--inputVals,-s", inputVals, "specify the values which will be transformed with the output values (given with --outputVals).") ->required();
   app.add_option("--outputVals,-r", outputVals, "specify the values which will be transformed with the output values (given with --outputVals).") ->required();
   

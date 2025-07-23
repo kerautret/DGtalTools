@@ -15,13 +15,13 @@
  **/
 /**
  * @file 3dImageViewer.cpp
- * @ingroup visualisation
+ * @ingroup Visualisation
  * @author Bertrand Kerautret (\c kerautre@loria.fr )
  * LORIA (CNRS, UMR 7503), University of Nancy, France
  *
  * @date 2011/01/04
  *
- * An example file named qglViewer.
+ * An example file named 3dImageViewer.
  *
  * This file is part of the DGtal library.
  */
@@ -33,8 +33,7 @@
 #include "DGtal/base/BasicFunctors.h"
 #include "DGtal/helpers/StdDefs.h"
 #include "DGtal/io/readers/VolReader.h"
-#include "DGtal/io/viewers/Viewer3D.h"
-#include "DGtal/io/DrawWithDisplay3DModifier.h"
+#include "DGtal/io/viewers/PolyscopeViewer.h"
 #include "DGtal/io/readers/PointListReader.h"
 #include "DGtal/io/readers/MeshReader.h"
 #include "DGtal/topology/helpers/Surfaces.h"
@@ -43,7 +42,7 @@
 #include "DGtal/io/Color.h"
 #include "DGtal/io/colormaps/GradientColorMap.h"
 #include "DGtal/io/readers/GenericReader.h"
-#ifdef WITH_ITK
+#ifdef DGTAL_WITH_ITK
 #include "DGtal/io/readers/DicomReader.h"
 #endif
 
@@ -51,7 +50,7 @@
 
 
 
-#include "specificClasses/Viewer3DImage.cpp"
+// #include "specificClasses/Viewer3DImage.cpp"
 
 #include "CLI11.hpp"
 
@@ -65,8 +64,9 @@ using namespace Z3i;
 /**
    @page Doc3dImageViewer 3dImageViewer
  
-   @brief Displays volume file as a voxel set by using QGLviewer.
-
+   @brief Displays volume file as a voxel set by using PolyscopeViewer.
+   @ingroup visualizationtools
+ 
    @b Usage:  3dImageViewer [OPTIONS] 1 [s]
 
    @b Allowed @b options @b are :
@@ -74,12 +74,12 @@ using namespace Z3i;
    @code
 
    Positionals:
-     1 TEXT:FILE REQUIRED                  vol file (.vol, .longvol .p3d, .pgm3d and if WITH_ITK is selected: dicom, dcm, mha, mhd). For longvol, dicom, dcm, mha or mhd formats, the input values are linearly scaled between 0 and 255.
+     1 TEXT:FILE REQUIRED                  vol file (.vol, .longvol .p3d, .pgm3d and if DGTAL_WITH_ITK is selected: dicom, dcm, mha, mhd). For longvol, dicom, dcm, mha or mhd formats, the input values are linearly scaled between 0 and 255.
      s TEXT                                display a set of discrete points (.sdp)
 
    Options:
      -h,--help                             Print this help message and exit
-     -i,--input TEXT:FILE REQUIRED         vol file (.vol, .longvol .p3d, .pgm3d and if WITH_ITK is selected: dicom, dcm, mha, mhd). For longvol, dicom, dcm, mha or mhd formats, the input values are linearly scaled between 0 and 255.
+     -i,--input TEXT:FILE REQUIRED         vol file (.vol, .longvol .p3d, .pgm3d and if DGTAL_WITH_ITK is selected: dicom, dcm, mha, mhd). For longvol, dicom, dcm, mha or mhd formats, the input values are linearly scaled between 0 and 255.
      --grid                                draw slice images using grid mode.
      --intergrid                           draw slice images using inter grid mode.
      --emptyMode                           remove the default boundingbox display.
@@ -152,9 +152,9 @@ int main( int argc, char** argv )
   unsigned char transp {255};
 
   
-  app.description("Displays volume file as a voxel set by using QGLviewer\n 3dImageViewer  $DGtal/examples/samples/lobster.vol --thresholdImage -m 180");
+  app.description("Displays volume file as a voxel set by using PolyscopeViewer\n 3dImageViewer  $DGtal/examples/samples/lobster.vol --thresholdImage -m 180");
   
-  app.add_option("-i,--input,1", inputFileName, "vol file (.vol, .longvol .p3d, .pgm3d and if WITH_ITK is selected: dicom, dcm, mha, mhd). For longvol, dicom, dcm, mha or mhd formats, the input values are linearly scaled between 0 and 255." )
+  app.add_option("-i,--input,1", inputFileName, "vol file (.vol, .longvol .p3d, .pgm3d and if DGTAL_WITH_ITK is selected: dicom, dcm, mha, mhd). For longvol, dicom, dcm, mha or mhd formats, the input values are linearly scaled between 0 and 255." )
   ->required()
   ->check(CLI::ExistingFile);
   
@@ -162,12 +162,12 @@ int main( int argc, char** argv )
   app.add_flag("--intergrid", grid , "draw slice images using inter grid mode.");
   app.add_flag("--emptyMode", emptyMode,"remove the default boundingbox display.");
   app.add_flag("--thresholdImage", thresholdImage,"threshold the image to define binary shape");
-  app.add_option("--thresholdMin", thresholdMin, "threshold min to define binary shape", true);
-  app.add_option("--thresholdMax", thresholdMax, "threshold maw to define binary shape", true);
+  app.add_option("--thresholdMin", thresholdMin, "threshold min to define binary shape");
+  app.add_option("--thresholdMax", thresholdMax, "threshold maw to define binary shape");
   app.add_option("--displaySDP,s",inputFileNameSDP, "display a set of discrete points (.sdp)" );
   app.add_option("--SDPindex", vectSDPIndex, "specify the sdp index.")
    ->expected(3);
-  app.add_option("--SDPball",ballRadius, "use balls to display a set of discrete points (if not set to 0 and used with displaySDP option).", true);
+  app.add_option("--SDPball",ballRadius, "use balls to display a set of discrete points (if not set to 0 and used with displaySDP option).");
   
   app.add_option("--displayMesh", inputFileNameMesh, "display a Mesh given in OFF or OFS format.");
   app.add_flag("--displayDigitalSurface",displayDigitalSurface, "display the digital surface instead of display all the set of voxels (used with thresholdImage or displaySDP options)" );
@@ -178,80 +178,59 @@ int main( int argc, char** argv )
   app.add_option("--colorMesh", colorMesh, "set the color of Mesh (given from displayMesh option) : r g b a ")
    ->expected(4);
 
-  app.add_option("--scaleX,-x", sx, "set the scale value in the X direction", true );
-  app.add_option("--scaleY,-y", sy, "set the scale value in the Y direction", true );
-  app.add_option("--scaleZ,-z", sy, "set the scale value in the Z direction", true );
-  app.add_option("--rescaleInputMin",rescaleInputMin, "min value used to rescale the input intensity (to avoid basic cast into 8  bits image).", true );
-  app.add_option("--rescaleInputMax",rescaleInputMax, "max value used to rescale the input intensity (to avoid basic cast into 8  bits image).", true );
-  app.add_option("--transparency,-t",transp, "change the default transparency", true );
+  app.add_option("--scaleX,-x", sx, "set the scale value in the X direction" );
+  app.add_option("--scaleY,-y", sy, "set the scale value in the Y direction" );
+  app.add_option("--scaleZ,-z", sy, "set the scale value in the Z direction" );
+  app.add_option("--rescaleInputMin",rescaleInputMin, "min value used to rescale the input intensity (to avoid basic cast into 8  bits image)." );
+  app.add_option("--rescaleInputMax",rescaleInputMax, "max value used to rescale the input intensity (to avoid basic cast into 8  bits image)." );
+  app.add_option("--transparency,-t",transp, "change the default transparency" );
 
   
   app.get_formatter()->column_width(40);
   CLI11_PARSE(app, argc, argv);
   // END parse command line using CLI ----------------------------------------------
 
-
-  QApplication application(argc,argv);
-  
   
   string extension = inputFileName.substr(inputFileName.find_last_of(".") + 1);
  
-  Viewer3DImage<>::ModeVisu mode;
-  if(emptyMode)
-    mode=Viewer3DImage<>::Empty;
-  else if(grid)
-    mode=Viewer3DImage<>::Grid;
-  else if(intergrid)
-    mode=Viewer3DImage<>::InterGrid;
-  else
-    mode=Viewer3DImage<>::BoundingBox;
-
-  Viewer3DImage<> viewer(mode);
-  viewer.setWindowTitle("simple Volume Viewer");
-  viewer.show();
-  viewer.setGLScale(sx, sy, sz);
+  PolyscopeViewer<> viewer;
 
   typedef DGtal::functors::Rescaling<DGtal::int64_t ,unsigned char > RescalFCT;
   Image3D image =  GenericReader< Image3D >::importWithValueFunctor( inputFileName,RescalFCT(rescaleInputMin,
                                                                                              rescaleInputMax,
-                                                                                             0, 255) );
+                                                                                             0,
+                                                                                             255));
   Domain domain = image.domain();
 
   trace.info() << "Image loaded: "<<image<< std::endl;
-  viewer.setVolImage(&image);
+  viewer << image;
   
   // Used to display 3D surface
   Z3i::DigitalSet set3d(domain);
 
-  viewer << Viewer3D<>::updateDisplay;
   if(thresholdImage){
-    GradientColorMap<long> gradient( thresholdMin, thresholdMax);
-    gradient.addColor(Color::Blue);
-    gradient.addColor(Color::Green);
-    gradient.addColor(Color::Yellow);
-    gradient.addColor(Color::Red);
+    viewer.newCubeList("Threshold image");
+    viewer.allowReuseList = true;
     for(Domain::ConstIterator it = domain.begin(), itend=domain.end(); it!=itend; ++it){
       unsigned char  val= image( (*it) );
-      Color c= gradient(val);
       if(val<=thresholdMax && val >=thresholdMin)
       {
         if(!displayDigitalSurface)
         {
-          viewer <<  CustomColors3D(Color((float)(c.red()), (float)(c.green()),(float)(c.blue()), transp),
-                                    Color((float)(c.red()), (float)(c.green()),(float)(c.blue()), transp));
-          viewer << *it;
+          viewer << WithQuantity(*it, "value", val);
         }
       }else
       {
         set3d.insert(*it);
       }
     }
+    viewer.endCurrentGroup();
   }
 
   if(inputFileNameSDP != "" ){
     if(colorSDP.size()==4){
       Color c(colorSDP[0], colorSDP[1], colorSDP[2], colorSDP[3]);
-      viewer << CustomColors3D(c, c);
+      viewer << c;
     }
 
     vector<Z3i::Point> vectVoxels;
@@ -262,24 +241,20 @@ int main( int argc, char** argv )
     {
       vectVoxels = PointListReader<Z3i::Point>::getPointsFromFile(inputFileNameSDP);
     }
+
+    if (ballRadius != 0.0) viewer.drawAsBalls();
     for(unsigned int i=0;i< vectVoxels.size(); i++)
     {
       if(!displayDigitalSurface)
       {
-        if(ballRadius != 0.0)
-        {
-          viewer.addBall (vectVoxels.at(i), ballRadius);
-        }
-        else
-        {
           viewer << vectVoxels.at(i);
-        }
       }
       else
       {
         set3d.insert(vectVoxels.at(i));
       }
     }
+    viewer.drawAsPaving();
   }
 
   if(inputFileNameMesh != "")
@@ -287,7 +262,7 @@ int main( int argc, char** argv )
     if(colorMesh.size() != 0)
     {
       Color c(colorMesh[0], colorMesh[1], colorMesh[2], colorMesh[3]);
-      viewer.setFillColor(c);
+      viewer.drawColor(c);
     }
     DGtal::Mesh<Z3i::RealPoint> aMesh(colorMesh.size() == 0);
     MeshReader<Z3i::RealPoint>::importOFFFile(inputFileNameMesh, aMesh);
@@ -305,42 +280,33 @@ int main( int argc, char** argv )
     trace.info() << "Extracting surface  set ... " ;
     Surfaces<KSpace>::extractAllConnectedSCell(vectConnectedSCell,K, SAdj, set3d, true);
     trace.info()<< " [done] " <<std::endl;
-    GradientColorMap<long> gradient( 0, vectConnectedSCell.size());
-    gradient.addColor(DGtal::Color::Red);
-    gradient.addColor(DGtal::Color::Yellow);
-    gradient.addColor(DGtal::Color::Green);
-    gradient.addColor(DGtal::Color::Cyan);
-    gradient.addColor(DGtal::Color::Blue);
-    gradient.addColor(DGtal::Color::Magenta);
-    gradient.addColor(DGtal::Color::Red);
 
-    viewer << DGtal::SetMode3D(vectConnectedSCell.at(0).at(0).className(), "Basic");
+    viewer.drawAsSimplified();
     for(unsigned int i= 0; i <vectConnectedSCell.size(); i++)
     {
       for(unsigned int j= 0; j <vectConnectedSCell.at(i).size(); j++)
       {
-        if(colorizeCC)
+        const auto& toDraw = vectConnectedSCell.at(i).at(j);
+        if(colorizeCC) 
         {
-          DGtal::Color c= gradient(i);
-          viewer << CustomColors3D(Color(250, 0,0, transp), Color(c.red(),
-                                                                  c.green(),
-                                                                  c.blue(), transp));
-        }else  if(colorSDP.size() != 0)
+          viewer << WithQuantity(toDraw, "index", i);
+        } 
+        else if(colorSDP.size() != 0)
         {
           Color c(colorSDP[0], colorSDP[1], colorSDP[2], colorSDP[3]);
-          viewer << CustomColors3D(c, c);
+          viewer << WithQuantity(toDraw, "color", c);
+        } 
+        else 
+        {
+          viewer << toDraw; 
         }
-        viewer << vectConnectedSCell.at(i).at(j);
       }
     }
   }
   
-  viewer << Viewer3D<>::updateDisplay;
   DGtal::Z3i::Point size = image.domain().upperBound() - image.domain().lowerBound();
   DGtal::Z3i::Point center = image.domain().lowerBound()+size/2;
   unsigned int maxDist = std::max(std::max(size[2], size[1]), size[0]);
-  viewer.camera()->setPosition(qglviewer::Vec(center[0],center[1], 
-                                              center[2] + 2.0*maxDist));
-  viewer.camera()->setSceneCenter(qglviewer::Vec(center[0],center[1],center[2]));
-  return application.exec();
+  viewer.show();
+  return 0;
 }

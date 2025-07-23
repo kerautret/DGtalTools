@@ -16,6 +16,7 @@
 
 /**
  * @file voAddBorder.cpp
+ * @ingroup Volumetric
  * @author David Coeurjolly (\c david.coeurjolly@liris.cnrs.fr )
  * Laboratoire d'InfoRmatique en Image et Systèmes d'information - LIRIS (CNRS, UMR 5205), CNRS, France
  *
@@ -45,7 +46,7 @@ using namespace Z3i;
  @page volSubSample volSubSample
  
  @brief Brutally sub samples a vol file (division by 2 in each direction).
-
+ @ingroup volumetrictools
 
  @b Usage: 	./volumetric/volSubSample [OPTIONS] 1 [2]
 
@@ -174,8 +175,8 @@ int main(int argc, char**argv)
   app.add_option("-i,--input,1", inputFileName, "Input vol file." )
   ->required()
   ->check(CLI::ExistingFile);
-  app.add_option("-o,--output,2", outputFileName, "Output filename.",true);
-  app.add_option("-f,--function", function, "Function used to the down-sampling: {none,max, min, mean}", true)
+  app.add_option("-o,--output,2", outputFileName, "Output filename.");
+  app.add_option("-f,--function", function, "Function used to the down-sampling: {none,max, min, mean}")
    -> check(CLI::IsMember({"mean", "none", "max", "min", "mean"}));
   
   app.get_formatter()->column_width(40);

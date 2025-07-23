@@ -18,7 +18,7 @@
  * @file raw2vol.cpp
  * @author David Coeurjolly (\c david.coeurjolly@liris.cnrs.fr )
  * Laboratoire d'InfoRmatique en Image et Systèmes d'information - LIRIS (CNRS, UMR 5205), CNRS, France
- *
+ * @ingroup Converters
  * @date 2012/05/01
  *
  *
@@ -46,8 +46,8 @@ using namespace Z3i;
 /**
  @page raw2vol raw2vol
  @brief  Converts a  8-bit raw file to vol.
-
-@b Usage: raw2vol [input] [output]
+ @ingroup convertertools
+ @b Usage: raw2vol [input] [output]
 
 @b Allowed @b options @b are:
 
@@ -104,7 +104,7 @@ int main(int argc, char**argv)
    app.add_option("-i,--input,1", inputFileName, "Input raw file." )
     ->required()
     ->check(CLI::ExistingFile);
-   app.add_option("-o,--output,2",outputFileName,"Output vol filename.", true);
+   app.add_option("-o,--output,2",outputFileName,"Output vol filename.");
    app.add_option("--x,-x", x, "x extent." )
    ->required();
    app.add_option("--y,-y", y, "y extent." )

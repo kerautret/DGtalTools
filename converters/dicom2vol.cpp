@@ -15,7 +15,7 @@
  **/
 /**
  * @file dicom2vol.cpp
- * @ingroup conerters
+ * @ingroup Converters
  * @author Bertrand Kerautret (\c kerautre@loria.fr )
  * LORIA (CNRS, UMR 7503), University of Nancy, France
  *
@@ -46,6 +46,9 @@ using namespace DGtal;
 
 /**
  @page dicom2vol dicom2vol
+ @ingroup convertertools
+
+
  @brief Converts dicom file into a volumetric file (.vol, .longvol .pgm3d).
 
 @b Usage: dicom2vol [input] [output]
@@ -91,7 +94,7 @@ int main( int argc, char** argv )
    app.add_option("-i,--input,1", inputFileName, "dicom image  (.dcm)." )
     ->required()
     ->check(CLI::ExistingFile);
-   app.add_option("-o,--output,2", outputFileName, "volumetric file (.vol, .longvol .pgm3d, .raw)", true);
+   app.add_option("-o,--output,2", outputFileName, "volumetric file (.vol, .longvol .pgm3d, .raw)");
    app.add_option("--dicomMin",dicomMin,"set minimum density threshold on Hounsfield scale" );
    app.add_option("--dicomMax",dicomMax,"set maximum density threshold on Hounsfield scale" );
 
